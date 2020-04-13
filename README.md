@@ -12,6 +12,7 @@
 
 # Usage
   Usage is dead simple too.
+  
   ![Usage screenshot](https://i.imgur.com/iDAZDIB.png)
 
 ## Bind shell
