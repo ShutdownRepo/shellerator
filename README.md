@@ -12,7 +12,7 @@
 
 # Usage
   Usage is dead simple too.
-  
+
   ![Usage screenshot](https://i.imgur.com/iDAZDIB.png)
 
 ## Bind shell
@@ -26,7 +26,7 @@
   python3 shellerator.py -r/--reverse-shell -i/--ip 192.168.56.1 -p/--port 1337
   ```
 ## Without a CLI menu
-  If you already know what type of shell you want to generate and don't have time to select the type in a beautiful CLI menu, you can set the type with the appropriate option.
+  If you already know what type of shell you want to generate and don't have time to select the language in the beautiful CLI menu, you can set it with the appropriate `-t` (or `--type`) option.
   ```
   python3 shellerator.py [-r | -b] -t/--type bash -i/--ip 192.168.56.1 -p/--port 1337
   ```
@@ -35,6 +35,7 @@
 ## Things to add
   Here are some things to add that I have in mind, I'll work on that asap
   - Add a `-l/--list` option for bind/revshell to list the types of shell in the DB (php, python, powershell, bash and so on)
+  - Rebuild the bind and reverse shells dictionnary
   - Add an asciinema to this readme and populate the readme a bit more ?
 
 # Sources
