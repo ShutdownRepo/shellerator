@@ -27,7 +27,7 @@ def get_options():
     bindshell = parser.add_argument_group('Bind shell options')
     # typeoptions and portoption are two options either bindshell or revshell will need (https://stackoverflow.com/questions/23775378/allowing-same-option-in-different-argparser-group)
     typeoption = bindshell.add_argument('-t', '--type', dest='TYPE', type=str.lower, help='Type of the shell to generate (Bash, Powershell, Java...)')
-    portoption = bindshell.add_argument('-p', '--port', dest='LPORT', type=int, help='Listener Port (required for reverse shells)')
+    portoption = bindshell.add_argument('-p', '--port', dest='LPORT', type=int, default=1337, help='Listener Port (required for reverse shells) (Default: 1337)')
     revshell = parser.add_argument_group('Reverse shell options')
     revshell._group_actions.append(typeoption)
     revshell.add_argument('-i', '--ip', dest='LHOST', type=str, help='Listener IP address (required for reverse shells)')
