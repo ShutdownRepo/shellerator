@@ -17,6 +17,7 @@ import re
 import argparse
 from colorama import Fore
 from colorama import Style
+import platform
 if platform.system() == 'Windows':
     from consolemenu import *
 else:
