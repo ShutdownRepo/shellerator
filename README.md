@@ -57,7 +57,6 @@
   Here are some things to add that I have in mind, I'll work on that asap
   - Add a `-l/--list` option for bind/revshell to list the types of shell in the DB (php, python, powershell, bash and so on)
   - Rebuild the bind and reverse shells dictionnary
-  - Add an asciinema to this readme and populate the readme a bit more ?
 
 # Sources
   Shells mostly come from the following links

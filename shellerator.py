@@ -15,9 +15,12 @@ import base64
 import sys
 import re
 import argparse
-from simple_term_menu import TerminalMenu
 from colorama import Fore
 from colorama import Style
+if platform.system() == 'Windows':
+    from consolemenu import *
+else:
+    from simple_term_menu import TerminalMenu
 
 def get_options():
     parser = argparse.ArgumentParser(description='Generate a bind/reverse shell')
@@ -44,12 +47,12 @@ def get_options():
     else:
         options.LPORT = str(options.LPORT)
     if not options.TYPE:
-        if options.SHELLTYPE == 'revshells':
-            shells_dict = revshells
-        elif options.SHELLTYPE == 'bindshells':
-            shells_dict = bindshells
-        menu = TerminalMenu(list(shells_dict.keys()), title='What type of shell do you want?')
-        selection = menu.show()
+        shells_dict = globals()[options.SHELLTYPE]
+        if platform.system() == 'Windows':
+            selection = SelectionMenu(list(shells_dict.keys()), title='What type of shell do you want?', show_exit_option=False)
+        else:
+            menu = TerminalMenu(list(shells_dict.keys()), title='What type of shell do you want?')
+            selection = menu.show()
         options.TYPE = list(shells_dict.keys())[selection]
     return options
 
