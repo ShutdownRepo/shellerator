@@ -56,7 +56,8 @@
 ## Things to add
   Here are some things to add that I have in mind, I'll work on that asap
   - Add a `-l/--list` option for bind/revshell to list the types of shell in the DB (php, python, powershell, bash and so on)
-  - Rebuild the bind and reverse shells dictionnary
+  - Add binshells
+  - Add somekind of option to help user get info on how to improve shell/tty (rlwrap, stty, ConPty (cf. PayloadsAllTheThings))
 
 # Sources
   Shells mostly come from the following links

