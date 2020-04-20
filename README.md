@@ -3,7 +3,7 @@
   This project is inspired by [Print-My-Shell](https://github.com/sameera-madushan/Print-My-Shell/). I just rewrote it and added some options and glitter to it.
   **The lists of reverse and bind shells are not perfect yet. I'll work on this when I have the time to. I'll be happy to review pull requests too :)**
 
-  ![Example](https://raw.githubusercontent.com/ShutdownRepo/shellerator/master/assets/example.gif)
+  ![Example (with menus)](https://raw.githubusercontent.com/ShutdownRepo/shellerator/master/assets/example-menus.gif)
 
 # Install
   The install is pretty simple, just clone this git and install the requirements.
@@ -40,6 +40,7 @@
   ```
   python3 shellerator.py [-r | -b] -t/--type bash -i/--ip 192.168.56.1 -p/--port 1337
   ```
+  ![Example (without menus)](https://raw.githubusercontent.com/ShutdownRepo/shellerator/master/assets/example-no-menus.gif)
 
 # To-Do List
 ## Things to add

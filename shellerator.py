@@ -236,6 +236,7 @@ if __name__ == '__main__':
     populate_shells()
     options = get_options()
     shells_dict = globals()[options.SHELLTYPE]
+    print()
     for notes, shell in shells_dict[options.TYPE]:
         shell_index = shells_dict[options.TYPE].index((notes, shell)) + 1
         if options.LHOST is not None:
