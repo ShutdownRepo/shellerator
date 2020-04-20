@@ -12,10 +12,10 @@ Reverse shells found on :
 '''
 
 import argparse
-import base64
 import sys
 import re
-import argparse
+import psutil
+import socket
 from colorama import Fore
 from colorama import Style
 import platform
@@ -23,6 +23,62 @@ if platform.system() == 'Windows':
     from consolemenu import *
 else:
     from simple_term_menu import TerminalMenu
+
+def MENU_shelltype(shelltype):
+    shells_dict = globals()[shelltype]
+    menu_list = list(shells_dict.keys())
+
+    if platform.system() == 'Windows':
+        selection = SelectionMenu.get_selection(menu_list, title='What type of shell do you want?', show_exit_option=False)
+    else:
+        menu = TerminalMenu(menu_list, title='What type of shell do you want?')
+        selection = menu.show()
+
+    return menu_list[selection]
+
+def MENU_interface():
+    interfaces = {}
+    net_if_addrs = psutil.net_if_addrs()
+    for iface, addr in net_if_addrs.items():
+        if iface == 'lo':
+            continue
+        for address in addr:
+            if address.family == socket.AF_INET:
+                interfaces.update({iface:address.address})
+
+    menu_list = []
+    for key in interfaces:
+        menu_list.append(key + ' (' + interfaces[key] + ')')
+
+    if platform.system() == 'Windows':
+        selection = SelectionMenu.get_selection(menu_list, title='Interface?', show_exit_option=False)
+    else:
+        menu = TerminalMenu(menu_list, title='Interface?')
+        selection = menu.show()
+
+    selection = menu_list[selection]
+    return selection.split(' ')[1].replace('(', '').replace(')', '')
+
+def MENU_port():
+    ports = {
+        'Default':'1337',
+        'HTTP':'80',
+        'HTTPS':'443',
+        'DNS':'53'
+    }
+
+    menu_list = []
+    for key in ports:
+        menu_list.append(key + ' (' + ports[key] + ')')
+
+    if platform.system() == 'Windows':
+        selection = SelectionMenu.get_selection(menu_list, title='Port?', show_exit_option=False)
+    else:
+        menu = TerminalMenu(menu_list, title='Port?')
+        selection = menu.show()
+
+    selection = menu_list[selection]
+    return selection.split(' ')[1].replace('(', '').replace(')', '')
 
 def get_options():
     parser = argparse.ArgumentParser(description='Generate a bind/reverse shell')
@@ -36,26 +92,20 @@ def get_options():
     bindshell = parser.add_argument_group('Bind shell options')
     # typeoptions and portoption are two options either bindshell or revshell will need (https://stackoverflow.com/questions/23775378/allowing-same-option-in-different-argparser-group)
     typeoption = bindshell.add_argument('-t', '--type', dest='TYPE', type=str.lower, help='Type of the shell to generate (Bash, Powershell, Java...)')
-    portoption = bindshell.add_argument('-p', '--port', dest='LPORT', type=int, default=1337, help='Listener Port (required for reverse shells) (Default: 1337)')
+    portoption = bindshell.add_argument('-p', '--port', dest='LPORT', type=int, help='Listener Port')
     revshell = parser.add_argument_group('Reverse shell options')
     revshell._group_actions.append(typeoption)
-    revshell.add_argument('-i', '--ip', dest='LHOST', type=str, help='Listener IP address (required for reverse shells)')
+    revshell.add_argument('-i', '--ip', dest='LHOST', type=str, help='Listener IP address')
     revshell._group_actions.append(portoption)
     options = parser.parse_args()
     if options.SHELLTYPE == 'revshells' and not options.LHOST:
-        parser.error('Listener IP address not supplied')
+        options.LHOST = MENU_interface()
     if not options.LPORT:
-        parser.error('Listener IP port not supplied')
+        options.LPORT = MENU_port()
     else:
         options.LPORT = str(options.LPORT)
     if not options.TYPE:
-        shells_dict = globals()[options.SHELLTYPE]
-        if platform.system() == 'Windows':
-            selection = SelectionMenu(list(shells_dict.keys()), title='What type of shell do you want?', show_exit_option=False)
-        else:
-            menu = TerminalMenu(list(shells_dict.keys()), title='What type of shell do you want?')
-            selection = menu.show()
-        options.TYPE = list(shells_dict.keys())[selection]
+        options.TYPE = MENU_shelltype(options.SHELLTYPE)
     return options
 
 # Helper function for populate_shells to add values to the dictionnaries
@@ -177,7 +227,10 @@ if __name__ == '__main__':
     shells_dict = globals()[options.SHELLTYPE]
     for notes, shell in shells_dict[options.TYPE]:
         shell_index = shells_dict[options.TYPE].index((notes, shell)) + 1
-        print_shell = shell.replace('{LHOST}', options.LHOST).replace('{LPORT}', options.LPORT).strip()
+        if options.LHOST is not None:
+            print_shell = shell.replace('{LHOST}', options.LHOST).replace('{LPORT}', options.LPORT).strip()
+        else:
+            print_shell = shell.replace('{LPORT}', options.LPORT).strip()
         print_notes = ''
         if notes is not None:
             print_notes = notes + ' '
