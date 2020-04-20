@@ -29,7 +29,7 @@ def MENU_shelltype(shelltype):
     menu_list = list(shells_dict.keys())
 
     if platform.system() == 'Windows':
-        selection = SelectionMenu(menu_list, title='What type of shell do you want?', show_exit_option=False)
+        selection = SelectionMenu.get_selection(menu_list, title='What type of shell do you want?', show_exit_option=False)
     else:
         menu = TerminalMenu(menu_list, title='What type of shell do you want?')
         selection = menu.show()
@@ -51,7 +51,7 @@ def MENU_interface():
         menu_list.append(key + ' (' + interfaces[key] + ')')
 
     if platform.system() == 'Windows':
-        selection = SelectionMenu(menu_list, title='Interface?', show_exit_option=False)
+        selection = SelectionMenu.get_selection(menu_list, title='Interface?', show_exit_option=False)
     else:
         menu = TerminalMenu(menu_list, title='Interface?')
         selection = menu.show()
@@ -72,7 +72,7 @@ def MENU_port():
         menu_list.append(key + ' (' + ports[key] + ')')
 
     if platform.system() == 'Windows':
-        selection = SelectionMenu(menu_list, title='Port?', show_exit_option=False)
+        selection = SelectionMenu.get_selection(menu_list, title='Port?', show_exit_option=False)
     else:
         menu = TerminalMenu(menu_list, title='Port?')
         selection = menu.show()
