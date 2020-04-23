@@ -64,7 +64,8 @@ def MENU_port():
         'Default':'1337',
         'HTTP':'80',
         'HTTPS':'443',
-        'DNS':'53'
+        'DNS':'53',
+        'Custom':''
     }
 
     menu_list = []
@@ -78,7 +79,10 @@ def MENU_port():
         selection = menu.show()
 
     selection = menu_list[selection]
-    return selection.split(' ')[1].replace('(', '').replace(')', '')
+    if selection.split(' ')[0] == 'Custom':
+        return input('Please enter custom port: ')
+    else:
+        return selection.split(' ')[1].replace('(', '').replace(')', '')
 
 def list_shells():
     print('Reverse shells')
