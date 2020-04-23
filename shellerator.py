@@ -49,6 +49,7 @@ def MENU_interface():
     menu_list = []
     for key in interfaces:
         menu_list.append(key + ' (' + interfaces[key] + ')')
+    menu_list.append('Custom')
 
     if platform.system() == 'Windows':
         selection = SelectionMenu.get_selection(menu_list, title='Interface?', show_exit_option=False)
@@ -57,7 +58,20 @@ def MENU_interface():
         selection = menu.show()
 
     selection = menu_list[selection]
-    return selection.split(' ')[1].replace('(', '').replace(')', '')
+
+    if selection == 'Custom':
+        print('Custom address?')
+        if platform.system() == 'Windows':
+            selection = input('>> ')
+        else:
+            selection = input(Fore.RED + Style.BRIGHT + '> ' + Style.RESET_ALL)
+        sys.stdout.write("\033[F") #back to previous line
+        sys.stdout.write("\033[K") #clear line
+        sys.stdout.write("\033[F") #back to previous line
+        sys.stdout.write("\033[K") #clear line
+        return selection
+    else:
+        return selection.split(' ')[1].replace('(', '').replace(')', '')
 
 def MENU_port():
     ports = {
@@ -70,6 +84,7 @@ def MENU_port():
     menu_list = []
     for key in ports:
         menu_list.append(key + ' (' + ports[key] + ')')
+    menu_list.append('Custom')
 
     if platform.system() == 'Windows':
         selection = SelectionMenu.get_selection(menu_list, title='Port?', show_exit_option=False)
@@ -78,7 +93,20 @@ def MENU_port():
         selection = menu.show()
 
     selection = menu_list[selection]
-    return selection.split(' ')[1].replace('(', '').replace(')', '')
+
+    if selection == 'Custom':
+        print('Custom port?')
+        if platform.system() == 'Windows':
+            selection = input('>> ')
+        else:
+            selection = input(Fore.RED + Style.BRIGHT + '> ' + Style.RESET_ALL)
+        sys.stdout.write("\033[F") #back to previous line
+        sys.stdout.write("\033[K") #clear line
+        sys.stdout.write("\033[F") #back to previous line
+        sys.stdout.write("\033[K") #clear line
+        return selection
+    else:
+        return selection.split(' ')[1].replace('(', '').replace(')', '')
 
 def list_shells():
     print('Reverse shells')
