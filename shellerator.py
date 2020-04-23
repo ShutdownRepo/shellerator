@@ -82,10 +82,10 @@ def MENU_port():
 
 def list_shells():
     print('Reverse shells')
-    for shell in revshells.keys():
+    for shell in sorted(revshells.keys()):
         print('   - ' + shell)
     print('\nBind shells')
-    for shell in bindshells.keys():
+    for shell in sorted(bindshells.keys()):
         print('   - ' + shell)
     quit()
 
