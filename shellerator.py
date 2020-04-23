@@ -26,7 +26,7 @@ else:
 
 def MENU_shelltype(shelltype):
     shells_dict = globals()[shelltype]
-    menu_list = list(shells_dict.keys())
+    menu_list = sorted(list(shells_dict.keys()))
 
     if platform.system() == 'Windows':
         selection = SelectionMenu.get_selection(menu_list, title='What type of shell do you want?', show_exit_option=False)
