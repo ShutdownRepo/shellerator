@@ -47,6 +47,7 @@
   Here are some things to add that I have in mind, I'll work on that asap
   - Add bindshells
   - Add encrypted shells and separate them from bind/rev ?
+  - Add webshells
   - Add some kind of option to help user get info on how to improve shell/tty (rlwrap, stty, ConPty (cf. PayloadsAllTheThings))
 
 # Sources
