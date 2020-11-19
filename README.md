@@ -35,7 +35,7 @@
     -i LHOST, --ip LHOST    Listener IP address
     -p LPORT, --port LPORT  Listener Port
   ```
-  If required options are not set, the tool will start in TUI (Terminal User Interface) with pretty menus.
+  If required options are not set, the tool will start in TUI (Terminal User Interface) with pretty menus but CLI works like a charm too.
 
   ![Example (without menus)](https://raw.githubusercontent.com/ShutdownRepo/shellerator/master/assets/example-no-menus.gif)
 
