@@ -24,19 +24,28 @@ if platform.system() == 'Windows':
 else:
     from simple_term_menu import TerminalMenu
 
-def MENU_shelltype(shelltype):
-    shells_dict = globals()[shelltype]
-    menu_list = sorted(list(shells_dict.keys()))
-
+def menu(title, menu_list):
     if platform.system() == 'Windows':
-        selection = SelectionMenu.get_selection(menu_list, title='What type of shell do you want?', show_exit_option=False)
+        selection = SelectionMenu.get_selection(menu_list, title=title, show_exit_option=False)
     else:
-        menu = TerminalMenu(menu_list, title='What type of shell do you want?')
+        menu = TerminalMenu(menu_list, title=title)
         selection = menu.show()
-
     return menu_list[selection]
 
-def MENU_interface():
+def menu_with_custom_choice(title, menu_list):
+    menu_list.append('Custom')
+    selection = menu(title, menu_list)
+    if selection == 'Custom':
+        print(f'(custom) {title}')
+        if platform.system() == 'Windows':
+            selection = input('>> ')
+        else:
+            selection = input(Fore.RED + Style.BRIGHT + '> ' + Style.RESET_ALL)
+        return selection
+    else:
+        return selection.split('(')[1].split(')')[0]
+
+def select_address():
     interfaces = {}
     net_if_addrs = psutil.net_if_addrs()
     for iface, addr in net_if_addrs.items():
@@ -49,70 +58,15 @@ def MENU_interface():
     menu_list = []
     for key in interfaces:
         menu_list.append(key + ' (' + interfaces[key] + ')')
-    menu_list.append('Custom')
 
-    if platform.system() == 'Windows':
-        selection = SelectionMenu.get_selection(menu_list, title='Interface?', show_exit_option=False)
-    else:
-        menu = TerminalMenu(menu_list, title='Interface?')
-        selection = menu.show()
-
-    selection = menu_list[selection]
-
-    if selection == 'Custom':
-        print('Custom address?')
-        if platform.system() == 'Windows':
-            selection = input('>> ')
-        else:
-            selection = input(Fore.RED + Style.BRIGHT + '> ' + Style.RESET_ALL)
-        sys.stdout.write("\033[F") #back to previous line
-        sys.stdout.write("\033[K") #clear line
-        sys.stdout.write("\033[F") #back to previous line
-        sys.stdout.write("\033[K") #clear line
-        return selection
-    else:
-        return selection.split(' ')[1].replace('(', '').replace(')', '')
-
-def MENU_port():
-    ports = {
-        'Default':'1337',
-        'HTTP':'80',
-        'HTTPS':'443',
-        'DNS':'53'
-    }
-
-    menu_list = []
-    for key in ports:
-        menu_list.append(key + ' (' + ports[key] + ')')
-    menu_list.append('Custom')
-
-    if platform.system() == 'Windows':
-        selection = SelectionMenu.get_selection(menu_list, title='Port?', show_exit_option=False)
-    else:
-        menu = TerminalMenu(menu_list, title='Port?')
-        selection = menu.show()
-
-    selection = menu_list[selection]
-
-    if selection == 'Custom':
-        print('Custom port?')
-        if platform.system() == 'Windows':
-            selection = input('>> ')
-        else:
-            selection = input(Fore.RED + Style.BRIGHT + '> ' + Style.RESET_ALL)
-        sys.stdout.write("\033[F") #back to previous line
-        sys.stdout.write("\033[K") #clear line
-        sys.stdout.write("\033[F") #back to previous line
-        sys.stdout.write("\033[K") #clear line
-        return selection
-    else:
-        return selection.split(' ')[1].replace('(', '').replace(')', '')
+    return menu_with_custom_choice("Listener interface/address?", menu_list)
 
 def list_shells():
-    print('Reverse shells')
+    print(Fore.BLUE + Style.BRIGHT + 'Reverse shells' + Style.RESET_ALL)
     for shell in sorted(revshells.keys()):
         print('   - ' + shell)
-    print('\nBind shells')
+    print()
+    print(Fore.BLUE + Style.BRIGHT + 'Bind shells' + Style.RESET_ALL)
     for shell in sorted(bindshells.keys()):
         print('   - ' + shell)
     quit()
@@ -130,22 +84,28 @@ def get_options():
     bindshell = parser.add_argument_group('Bind shell options')
     # typeoptions and portoption are two options either bindshell or revshell will need (https://stackoverflow.com/questions/23775378/allowing-same-option-in-different-argparser-group)
     typeoption = bindshell.add_argument('-t', '--type', dest='TYPE', type=str.lower, help='Type of the shell to generate (Bash, Powershell, Java...)')
-    portoption = bindshell.add_argument('-p', '--port', dest='LPORT', type=int, help='Listener Port')
+    portoption = bindshell.add_argument('-lp', '--lport', dest='LPORT', type=str, help='Listener Port')
     revshell = parser.add_argument_group('Reverse shell options')
     revshell._group_actions.append(typeoption)
-    revshell.add_argument('-i', '--ip', dest='LHOST', type=str, help='Listener IP address')
+    revshell.add_argument('-lh', '--lhost', dest='LHOST', type=str, help='Listener IP address')
     revshell._group_actions.append(portoption)
     options = parser.parse_args()
     if options.LIST:
         list_shells()
     if options.SHELLTYPE == 'revshells' and not options.LHOST:
-        options.LHOST = MENU_interface()
+        options.LHOST = select_address()
     if not options.LPORT:
-        options.LPORT = MENU_port()
-    else:
-        options.LPORT = str(options.LPORT)
+        menu_list = [
+            'L33t (1337)',
+            'HTTPS (443)'
+            'HTTP (80)',
+            'DNS (53)',
+        ]
+        options.LPORT = menu_with_custom_choice("Listener port?", menu_list)
     if not options.TYPE:
-        options.TYPE = MENU_shelltype(options.SHELLTYPE)
+        shells_dict = globals()[options.SHELLTYPE]
+        menu_list = sorted(list(shells_dict.keys()))
+        options.TYPE = menu('What type of shell do you want?', menu_list)
     return options
 
 # Helper function for populate_shells() to add values to the dictionnaries
@@ -275,3 +235,8 @@ if __name__ == '__main__':
         if notes is not None:
             print_notes = notes + ' '
         print(Fore.BLUE + Style.BRIGHT + '[' + str(shell_index) + '] ' + print_notes + Style.RESET_ALL + print_shell + '\n')
+    if options.SHELLTYPE == "revshells":
+        cmdline = f'{sys.argv[0]} --reverse-shell --type {options.TYPE} --lhost {options.LHOST} --lport {options.LPORT}'
+    elif options.SHELLTYPE == "bindshells":
+        cmdline = f'{sys.argv[0]} --bind-shell --type {options.TYPE} --lport {options.LPORT}'
+    print(Fore.RED + Style.BRIGHT + 'CLI command used\n' + Style.RESET_ALL + cmdline + '\n')

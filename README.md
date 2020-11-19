@@ -1,7 +1,8 @@
 # Shellerator
   Shellerator is a simple command-line tool aimed to help pentesters quickly generate one-liner reverse/bind shells in multiple languages (Bash, Powershell, Java, Python...).
-  This project is inspired by [Print-My-Shell](https://github.com/sameera-madushan/Print-My-Shell/). I just rewrote it and added some options and glitter to it.
-  **The lists of reverse and bind shells are not perfect yet. I'll work on this when I have the time to. I'll be happy to review pull requests too :)**
+  Another similar project for the generation of one-line file downloading commands is based on this code [Uberfile](https://github.com/ShutdownRepo/uberfile)
+
+  This project is installed by default in the pentesting OS [Exegol](https://github.com/ShutdownRepo/Exegol)
 
   ![Example (with menus)](https://raw.githubusercontent.com/ShutdownRepo/shellerator/master/assets/example-menus.gif)
 
@@ -34,12 +35,8 @@
     -i LHOST, --ip LHOST    Listener IP address
     -p LPORT, --port LPORT  Listener Port
   ```
+  If required options are not set, the tool will start in TUI (Terminal User Interface) with pretty menus.
 
-## Without CLI menus
-  If you already know what type of shell you want to generate and don't have time to select the language in the beautiful CLI menu, you can set it with the appropriate `-t` (or `--type`) option.
-  ```
-  python3 shellerator.py [-r | -b] -t/--type bash -i/--ip 192.168.56.1 -p/--port 1337
-  ```
   ![Example (without menus)](https://raw.githubusercontent.com/ShutdownRepo/shellerator/master/assets/example-no-menus.gif)
 
 # To-Do List
@@ -50,8 +47,9 @@
   - Add webshells
   - Add some kind of option to help user get info on how to improve shell/tty (rlwrap, stty, ConPty (cf. PayloadsAllTheThings))
 
-# Sources
-  Shells mostly come from the following links
+# Sources & credits
+  This project is inspired by [Print-My-Shell](https://github.com/sameera-madushan/Print-My-Shell/).
+  Some commands come from the following links
   - https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md
   - http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet
   - https://www.hackingtutorials.org/networking/hacking-netcat-part-2-bind-reverse-shells/
