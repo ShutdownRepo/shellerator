@@ -1,4 +1,5 @@
 import shutil
+import os
 from setuptools import setup
 
 with open('README.md', 'r', encoding='utf-8') as f:
@@ -29,3 +30,5 @@ setup(
     install_requires=requirements,
     scripts=['shellerator']
 )
+
+os.remove('shellerator')
