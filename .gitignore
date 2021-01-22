@@ -4,4 +4,4 @@
 # Python install files
 build/
 dist/
-shellerator.egg-info/
+*.egg-info/
