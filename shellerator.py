@@ -97,7 +97,7 @@ def get_options():
     if not options.LPORT:
         menu_list = [
             'L33t (1337)',
-            'HTTPS (443)'
+            'HTTPS (443)',
             'HTTP (80)',
             'DNS (53)',
         ]
