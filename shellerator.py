@@ -18,11 +18,19 @@ import psutil
 import socket
 from colorama import Fore
 from colorama import Style
+from signal import signal
+from signal import SIGINT 
 import platform
 if platform.system() == 'Windows':
     from consolemenu import *
 else:
     from simple_term_menu import TerminalMenu
+
+def def_handler(sig, frame):
+    print( Fore.RED + Style.BRIGHT + "\n[!] Execution canceled by user." + Style.RESET_ALL + '\n')
+    exit(1)
+
+signal(SIGINT, def_handler)
 
 def menu(title, menu_list):
     if platform.system() == 'Windows':
