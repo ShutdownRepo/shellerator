@@ -33,7 +33,7 @@ else:
 def signal_handler(sig, frame):
     exit(1)
 
-# Handle ^+C key interruption
+# Handle Ctrl+C key interruption
 signal.signal(signal.SIGINT, signal_handler)
 
 def menu(title, menu_list):
