@@ -6,7 +6,6 @@ readme = "README.md"
 authors = [{name = "Shutdown"}]
 requires-python = ">=3.6"
 dependencies = [
-    "argparse>=1.4.0",
     "colorama>=0.4.6",
     "console-menu>=0.8.0",
     "psutil>=7.2.1",
