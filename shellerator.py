@@ -260,4 +260,4 @@ def main():
         print(upgrade_tty(args.verbose))
 
 if __name__ == '__main__':
-	main()
+    main()
