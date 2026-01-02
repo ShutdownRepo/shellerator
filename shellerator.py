@@ -107,7 +107,7 @@ def list_shells(revshells, bindshells, webshells):
         print(f"   - {webshell}")
 
 # Return list of listeners for reverse shells
-def get_listeners(lport,verbosity=False):
+def get_listeners(lport, verbosity=False):
     listeners = {
         'netcat': f"nc -nlvp {lport}",
         'rlwrap + nc': f"rlwrap -cAr nc -nlvp {lport}",
