@@ -15,7 +15,7 @@ import argparse
 import sys
 import json
 import socket
-import subprocess
+import base64
 import tempfile
 import signal
 import ipaddress
@@ -86,23 +86,23 @@ def check_shell_args(shells, args):
             if int(args.LPORT) < 1 or int(args.LPORT) > 65535:
                 raise ValueError
         except ValueError:
-            sys.exit(f"{Fore.RED + Style.BRIGHT}[-]{Style.RESET_ALL} The port number is incorrect!")
+            sys.exit(f"{Fore.RED + Style.BRIGHT}[-]{Style.RESET_ALL} Port number must be between 1 and 65535")
 
         # Check if the IP address specified by the user is an IPv4 (The check is only done for reverse shells)
         if args.SHELLTYPE != "bindshells":
             try:
-                isinstance(ipaddress.ip_address(args.LHOST), ipaddress.IPv4Address)
+                ip_addr = ipaddress.ip_address(args.LHOST)
             except ValueError:
-                sys.exit(f"{Fore.RED + Style.BRIGHT}[-]{Style.RESET_ALL} The IPv4 is incorrect!")
+                sys.exit(f"{Fore.RED + Style.BRIGHT}[-]{Style.RESET_ALL} {args.LHOST} does not appear to be an IPv4")
 
 def list_shells(revshells, bindshells, webshells):
-    print(f"{Fore.BLUE + Style.BRIGHT} Reverse shells {Style.RESET_ALL}")
+    print(f"{Fore.BLUE + Style.BRIGHT}Reverse shells{Style.RESET_ALL}")
     for revshell in sorted(revshells.keys()):
         print(f"   - {revshell}")
-    print(f"\n{Fore.BLUE + Style.BRIGHT} Bindshells {Style.RESET_ALL}")
+    print(f"\n{Fore.BLUE + Style.BRIGHT}Bindshells{Style.RESET_ALL}")
     for bindshell in sorted(bindshells.keys()):
         print(f"   - {bindshell}")
-    print(f"\n{Fore.BLUE + Style.BRIGHT} Webshells {Style.RESET_ALL}")
+    print(f"\n{Fore.BLUE + Style.BRIGHT}Webshells{Style.RESET_ALL}")
     for webshell in sorted(webshells.keys()):
         print(f"   - {webshell}")
 
@@ -128,7 +128,7 @@ def get_listeners(lport, verbosity=False):
     }
 
     return {
-        listener: command.format(lport=lport) + (comments.get(listener, "") if verbosity else "") for listener, command in listeners.items()
+        listener: command + (comments.get(listener, "") if verbosity else "") for listener, command in listeners.items()
     }
     
 def format_shell(shell_index, shell, comment):
@@ -150,7 +150,7 @@ Press {Fore.YELLOW + Style.BRIGHT}[ENTER]{Style.RESET_ALL} to continue
 reset
 export SHELL=bash
 export TERM=xterm-256color
-stty rows `<rows>` columns `<columns>`{Style.RESET_ALL} {Fore.YELLOW + Style.BRIGHT}(Replace `<rows>` and `<columns>` with the values returned by `stty size`.){Style.RESET_ALL}
+stty rows `<rows>` columns `<columns>`{Style.RESET_ALL} {Fore.YELLOW + Style.BRIGHT}(Replace `<rows>` and `<columns>` with the values returned by `stty size`){Style.RESET_ALL}
 """
     else :
         return f"""\n{Fore.RED + Style.BRIGHT}[Upgrade your TTY]{Style.RESET_ALL}
@@ -231,14 +231,18 @@ def main():
         for shell_index, revshell in enumerate(revshells[args.TYPE]):
             shell = revshell['command'].replace('{LHOST}', args.LHOST).replace('{LPORT}', args.LPORT)
             comment = revshell['comments'].strip()
-            if platform.system() != "Windows" and args.TYPE == "powershell" and shell_index == 4:
+            if args.TYPE == "powershell" and shell_index == 4:
                 # Create and write the generated base64 encoded PowerShell reverse shell into a temporary file
-                with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as f:
-                    f.write(revshells[args.TYPE][0]['command'].replace("'",'"').replace('{LHOST}', args.LHOST).replace('{LPORT}', args.LPORT))
-                # pwsh_base64_revshell
-                shell = "powershell -e " + subprocess.check_output(f"cat {f.name} | iconv -t utf-16le | base64 -w0", shell=True, text=True).strip()
-                subprocess.run(["rm", f.name], check=True)
-            print(format_shell(shell_index, shell, comment)) if shell != "" else ""
+                with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as tmp_file:
+                    tmp_file.write(revshells[args.TYPE][0]['command'].replace("'",'"').replace('{LHOST}', args.LHOST).replace('{LPORT}', args.LPORT))
+                with open(tmp_file.name, encoding='utf-8') as f:
+                    data = f.read()
+                    shell_utf16 = data.encode('utf-16le')
+                    # pwsh_base64_revshell
+                    shell = "powershell -e " + base64.b64encode(shell_utf16).decode()
+                os.remove(tmp_file.name)
+            if shell:
+                print(format_shell(shell_index, shell, comment))
         # Display listeners
         print(f"\n{Fore.RED + Style.BRIGHT}[Listeners] {Style.RESET_ALL}")
         listeners = get_listeners(args.LPORT, args.verbose)
