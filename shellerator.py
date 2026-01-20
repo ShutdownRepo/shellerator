@@ -123,7 +123,7 @@ def get_listeners(lport, verbosity=False):
         'rlwrap + nc': f" {Fore.YELLOW + Style.BRIGHT}(Simple alternative for upgrading Windows reverse shells){Style.RESET_ALL}",
         'penelope': f" {Fore.YELLOW + Style.BRIGHT}(Great for upgrading Linux reverse shells){Style.RESET_ALL}",
         'ConPty': f" {Fore.YELLOW + Style.BRIGHT}(Great for upgrading Windows reverse shells){Style.RESET_ALL}",
-        'socat': f" {Fore.YELLOW + Style.BRIGHT}(Provide a fully interactive TTY. The Linux target must have Socat installed){Style.RESET_ALL}"
+        'socat': f" {Fore.YELLOW + Style.BRIGHT}(Provides a fully interactive TTY. The Linux target must have Socat installed){Style.RESET_ALL}"
     }
 
     return {
