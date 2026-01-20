@@ -171,8 +171,19 @@ stty rows <rows> columns <columns>
       
 def main():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(BASE_DIR, "data", "shells.json")) as f:
-        shells=json.load(f)
+    shells_path = os.path.join(BASE_DIR, "data", "shells.json")
+    try:
+        with open(shells_path) as f:
+            shells = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: shells.json not found at '{shells_path}'.", file=sys.stderr)
+        sys.exit(1)
+    except PermissionError:
+        print(f"Error: insufficient permissions to read '{shells_path}'.", file=sys.stderr)
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error: failed to parse JSON in '{shells_path}': {e}", file=sys.stderr)
+        sys.exit(1)
     revshells = shells['revshells']
     bindshells = shells['bindshells']
     webshells = shells['webshells']
