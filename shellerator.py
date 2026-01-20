@@ -142,7 +142,7 @@ script -q /dev/null -c /bin/bash
 -- 
 {Fore.BLUE + Style.BRIGHT}[2]{Style.RESET_ALL} Press {Fore.YELLOW + Style.BRIGHT}Ctrl+Z{Style.RESET_ALL} to background your TTY, then run:
 stty size{Style.RESET_ALL} {Fore.YELLOW + Style.BRIGHT}(Returns the rows and columns of your current terminal window){Style.RESET_ALL}
-stty raw -echo; fg{Style.RESET_ALL} {Fore.YELLOW + Style.BRIGHT}(Prevents commands to be echoed, enables tab completion, handles Ctrl+C, etc.){Style.RESET_ALL}
+stty raw -echo; fg{Style.RESET_ALL} {Fore.YELLOW + Style.BRIGHT}(Prevents commands from being echoed, enables tab completion, handles Ctrl+C, etc.){Style.RESET_ALL}
 Press {Fore.YELLOW + Style.BRIGHT}[ENTER]{Style.RESET_ALL} to continue
 --
 {Fore.BLUE + Style.BRIGHT}[3]{Style.RESET_ALL} Reset your shell, export the SHELL and TERM environment variables, and set a proper terminal size to avoid text overlapping:
