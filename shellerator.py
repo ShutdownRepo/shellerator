@@ -151,7 +151,7 @@ export SHELL=bash
 export TERM=xterm-256color
 stty rows `<rows>` columns `<columns>`{Style.RESET_ALL} {Fore.YELLOW + Style.BRIGHT}(Replace `<rows>` and `<columns>` with the values returned by `stty size`){Style.RESET_ALL}
 """
-    else :
+    else:
         return f"""\n{Fore.RED + Style.BRIGHT}[Upgrade your TTY]{Style.RESET_ALL}
 {Fore.BLUE + Style.BRIGHT}[1]{Style.RESET_ALL} Execute any of the following commands from your reverse shell to obtain a TTY:
 python -c 'import pty; pty.spawn("/bin/bash")'
