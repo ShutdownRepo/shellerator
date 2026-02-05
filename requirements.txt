@@ -1,5 +1,0 @@
-simple_term_menu
-colorama
-argparse
-console-menu
-psutil
