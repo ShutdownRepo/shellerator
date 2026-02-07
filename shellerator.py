@@ -7,8 +7,6 @@ Reverse shells found on :
 - https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md
 - http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet
 - https://www.hackingtutorials.org/networking/hacking-netcat-part-2-bind-reverse-shells/
-- https://ashr.net/bind/and/reverse/shell/cheatsheet/windows/and/linux.aspx
-- https://krober.biz/misc/reverse_shell.php
 '''
 
 import argparse
@@ -194,7 +192,7 @@ def main():
     shelltype = parser.add_mutually_exclusive_group()
     shelltype.add_argument('-b', '--bind-shell', dest='SHELLTYPE', action='store_const', const='bindshells', help='Generate a bind shell (you connect to the target)')
     shelltype.add_argument('-r', '--reverse-shell', dest='SHELLTYPE', action='store_const', const='revshells', help='Generate a reverse shell (the target connects to you) (Default)')
-    shelltype.add_argument('-wsh', '--web-shell', dest='SHELLTYPE', action='store_const', const='webshells', help='Generate a webshell')
+    shelltype.add_argument('-w', '--web-shell', dest='SHELLTYPE', action='store_const', const='webshells', help='Generate a webshell')
     parser.add_argument('-v','--verbose', action='store_true', help="Enable verbosity")
     # Sets reverse shell as the default shell type
     parser.set_defaults(SHELLTYPE='revshells')
