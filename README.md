@@ -67,7 +67,7 @@ Shellerator will automatically start a TUI (Terminal User Interface) when a requ
 
 ## Generate a Netcat bindshell
 
-![Netcat Bindshell](assets/netcat_bind_shell_cli.gif)
+![Netcat Bindshell](assets/netcat_bindshell_cli.gif)
 
 # Sources & credits
 
