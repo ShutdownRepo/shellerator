@@ -62,7 +62,7 @@ Shellerator will automatically start a TUI (Terminal User Interface) when a requ
 
 ## Generate a PHP webshell
 
-![Netcat Bindshell](assets/php_webshell_cli.gif)
+![PHP Webshell](assets/php_webshell_cli.gif)
 
 
 ## Generate a Netcat bindshell
